@@ -23,6 +23,7 @@ implementation methods, not to write the mod for them**.
   `LOCAL.md` as shared project documentation.
 - **Verify, do not assume.** Member names, nullability, `virtual`-ness, and load order all change the
   answer here — check them rather than guessing.
+- **Use https://db.sp-tarkov.com/search to decipher item ids into item names.
 
 ## What this project is
 
