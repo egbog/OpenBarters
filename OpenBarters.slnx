@@ -1,0 +1,10 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+    <BuildType Name="Source-Debug" />
+  </Configurations>
+  <Project Path="OpenBarters.csproj">
+    <Build Solution="Source-Debug|*" Project="false" />
+  </Project>
+</Solution>

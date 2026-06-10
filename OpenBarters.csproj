@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	<Version>0.0.1</Version>
+    <OutputType>Library</OutputType>
+	<RootNamespace>_OpenBarters</RootNamespace>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<Configurations>Debug;Release;Source-Debug</Configurations>
+  </PropertyGroup>
+  
+    <!-- Allow go to declaration using project source instead of decompiled source -->
+  <ItemGroup Condition="'$(Configuration)'=='Source-Debug'">
+    <ProjectReference Include="..\..\server-csharp\Libraries\SPTarkov.Server.Core\SPTarkov.Server.Core.csproj" />
+    <ProjectReference Include="..\..\server-csharp\Libraries\SPTarkov.Common\SPTarkov.Common.csproj" />
+    <ProjectReference Include="..\..\server-csharp\Libraries\SPTarkov.DI\SPTarkov.DI.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup Condition="'$(Configuration)'!='Source-Debug'">
+    <PackageReference Include="SPTarkov.Server.Core" Version="4.0.0" />
+    <PackageReference Include="SPTarkov.Common" Version="4.0.0" />
+    <PackageReference Include="SPTarkov.DI" Version="4.0.0" />
+  </ItemGroup>
+
+</Project>
