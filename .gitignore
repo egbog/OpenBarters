@@ -432,5 +432,6 @@ Testing/**/Properties/launchSettings.json
 
 # Machine-local deployment paths / runtime notes (per-developer, not shared)
 LOCAL.md
+TRADERS.md
 
 Client/dependencies/
