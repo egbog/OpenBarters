@@ -429,3 +429,6 @@ Libraries/SPTarkov.Server.Core/Utils/ProgramStatics.Generated.cs
 
 # Not necessary to be included in the repo
 Testing/**/Properties/launchSettings.json
+
+# Machine-local deployment paths / runtime notes (per-developer, not shared)
+LOCAL.md
