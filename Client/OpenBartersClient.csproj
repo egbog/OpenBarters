@@ -1,0 +1,61 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	<Version>0.0.1</Version>
+    <OutputType>Library</OutputType>
+	<RootNamespace>_OpenBarters</RootNamespace>
+	<LangVersion>latest</LangVersion>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+	<RunPostBuildEvent>Always</RunPostBuildEvent>
+	<Configurations>Debug;Release;Source-Debug</Configurations>
+  </PropertyGroup>
+  
+      <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <GenerateAssemblyInfo>True</GenerateAssemblyInfo>
+	<DebugType>Full</DebugType>
+	<Optimize>false</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Source-Debug|AnyCPU'">
+    <GenerateAssemblyInfo>True</GenerateAssemblyInfo>
+    <DebugType>Full</DebugType>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <GenerateAssemblyInfo>True</GenerateAssemblyInfo>
+  </PropertyGroup>
+  
+  <ItemGroup>
+	<PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
+    <PackageReference Include="BepInEx.Core" Version="5.*" />
+    <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+  
+  <!-- Allow go to declaration using project source instead of decompiled source -->
+  <ItemGroup Condition="'$(Configuration)'=='Source-Debug'">
+    <ProjectReference Include="..\..\Decompiled-SPT4.0.0\Assembly-CSharp\Assembly-CSharp.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup Condition="'$(Configuration)'!='Source-Debug'">
+    <Reference Include="Assembly-CSharp" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Include="Comfort" />
+    <Reference Include="UnityEngine" />
+	<Reference Include="UnityEngine.CoreModule" />
+	<Reference Include="UnityEngine.UI" />
+	<Reference Include="ItemComponent.Types" />
+	<Reference Include="spt-reflection" />
+	<Reference Include="spt-common" />
+  </ItemGroup>
+  
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="PowerShell.exe -ExecutionPolicy Bypass -File &quot;$(ProjectDir)\PostBuild.ps1&quot; -DebugType &quot;$(DebugType)&quot; -AssemblyName &quot;$(AssemblyName)&quot; -Configuration &quot;$(ConfigurationName)&quot; -Framework &quot;$(TargetFramework)&quot;" />
+  </Target>
+
+
+</Project>
