@@ -16,7 +16,7 @@ public class OpenBarterController {
         _itemFactoryClass = Singleton<ItemFactoryClass>.Instance;
 
         _barterStash = _itemFactoryClass.CreateFakeStash(null);
-        BarterTableGrid = new StashGridClass("barterTable", 8, 6, false, new ItemFilter[0], _barterStash);
+        BarterTableGrid = new StashGridClass("barterTable", 8, 8, false, new ItemFilter[0], _barterStash);
         _barterStash.Grids[0] = BarterTableGrid;
         TraderController = new TraderControllerClass(_barterStash, traderId, traderNickname, true, EOwnerType.Profile);
     }

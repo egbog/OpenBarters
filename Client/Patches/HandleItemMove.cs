@@ -1,6 +1,7 @@
 ﻿using EFT.InventoryLogic;
 using EFT.UI.DragAndDrop;
 using SPT.Reflection.Patching;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace OpenBarters.Patches;
@@ -47,6 +48,7 @@ public class HandleItemMoveCanAccept : ModulePatch {
         return typeof(TradingTableGridView).GetMethod("CanAccept", BindingFlags.Instance | BindingFlags.Public);
     }
 
+    [SuppressMessage("ReSharper", "InconsistentNaming")]
     [PatchPrefix]
     private static bool Prefix(TradingTableGridView __instance, ref bool __result, ItemContextClass itemContext,
                                ref GStruct153       operation, ref TraderAssortmentControllerClass ___traderAssortmentControllerClass) {
