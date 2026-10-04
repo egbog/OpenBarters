@@ -9,7 +9,7 @@ $scriptDir = $PSScriptRoot
 $sourceFilesRelease = @("$AssemblyName.dll")
 $sourceFilesDebug = @("$AssemblyName.dll", "$AssemblyName.pdb", "$AssemblyName.dll.mdb")
 $activeSourceFiles
-$sptInstallPath = "E:\games\SPT 4.0.13 dev"
+$sptInstallPath = "E:\games\SPT 4.1.x dev"
 $sptClientModsPath = Join-Path $sptInstallPath "BepInEx\plugins"
 $pdb2mdb = Join-Path $scriptDir "pdb2mdb.exe"
 

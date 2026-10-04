@@ -7,6 +7,7 @@
 	<LangVersion>latest</LangVersion>
     <TargetFramework>netstandard2.1</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
+	<Nullable>enable</Nullable>
 	<RunPostBuildEvent>Always</RunPostBuildEvent>
 	<Configurations>Debug;Release;Source-Debug</Configurations>
   </PropertyGroup>
