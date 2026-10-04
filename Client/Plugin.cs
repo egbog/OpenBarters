@@ -24,5 +24,6 @@ public class Plugin : BaseUnityPlugin {
         new CloseMultiSelectWindow ().Enable();
         new HandleItemMove().Enable();
         new HandleItemMoveCanAccept().Enable();
+        new IsBeingBartered().Enable();
     }
 }

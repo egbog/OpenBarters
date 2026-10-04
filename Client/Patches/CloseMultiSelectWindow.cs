@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using EFT.Trading;
 using EFT.UI;
 using SPT.Reflection.Patching;
 
@@ -10,7 +11,7 @@ public class CloseMultiSelectWindow : ModulePatch {
     }
 
     [PatchPostfix]
-    private static void Postfix() {
+    private static void Postfix(Assortment ____traderAssortment) {
         TradingTable    tradingTable     = ShowMultiSelectWindow.BarterTradingTable;
         UpdatableToggle openBarterToggle = ShowMultiSelectWindow.OpenBarterToggle;
 
@@ -21,5 +22,7 @@ public class CloseMultiSelectWindow : ModulePatch {
         if (openBarterToggle != null) {
             openBarterToggle.gameObject.SetActive(false);
         }
-    }
+
+		____traderAssortment?.PreparedItemsChanged.Invoke();
+	}
 }
