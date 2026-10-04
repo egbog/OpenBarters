@@ -4,7 +4,7 @@
 	<Version>0.0.1</Version>
     <OutputType>Library</OutputType>
 	<RootNamespace>_OpenBarters</RootNamespace>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	<!-- The two lines below will set the output path for the binaries -->
@@ -16,15 +16,15 @@
   
     <!-- Allow go to declaration using project source instead of decompiled source -->
   <ItemGroup Condition="'$(Configuration)'=='Source-Debug'">
-    <ProjectReference Include="..\..\server-csharp\Libraries\SPTarkov.Server.Core\SPTarkov.Server.Core.csproj" />
-    <ProjectReference Include="..\..\server-csharp\Libraries\SPTarkov.Common\SPTarkov.Common.csproj" />
-    <ProjectReference Include="..\..\server-csharp\Libraries\SPTarkov.DI\SPTarkov.DI.csproj" />
+    <ProjectReference Include="..\..\server-csharp\Libraries\SPTushonka.Server.Core\SPTushonka.Server.Core.csproj" />
+    <ProjectReference Include="..\..\server-csharp\Libraries\SPTushonka.Common\SPTushonka.Common.csproj" />
+    <ProjectReference Include="..\..\server-csharp\Libraries\SPTushonka.DI\SPTushonka.DI.csproj" />
   </ItemGroup>
   
   <ItemGroup Condition="'$(Configuration)'!='Source-Debug'">
-    <PackageReference Include="SPTarkov.Server.Core" Version="4.0.0" />
-    <PackageReference Include="SPTarkov.Common" Version="4.0.0" />
-    <PackageReference Include="SPTarkov.DI" Version="4.0.0" />
+    <PackageReference Include="SPTushonka.Server.Core" Version="4.1.3" />
+    <PackageReference Include="SPTushonka.Common" Version="4.1.3" />
+    <PackageReference Include="SPTushonka.DI" Version="4.1.3" />
   </ItemGroup>
   
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
