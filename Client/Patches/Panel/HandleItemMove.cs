@@ -6,7 +6,7 @@ using SPT.Reflection.Patching;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
-namespace OpenBarters.Patches;
+namespace OpenBarters.Patches.Panel;
 
 public class HandleItemMove : ModulePatch {
     protected static Item CloneForBasket(Item item, LocationInGrid location) {

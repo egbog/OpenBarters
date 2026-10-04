@@ -3,7 +3,7 @@ using EFT.Trading;
 using EFT.UI;
 using SPT.Reflection.Patching;
 
-namespace OpenBarters.Patches;
+namespace OpenBarters.Patches.Panel;
 
 public class CloseMultiSelectWindow : ModulePatch {
     protected override MethodBase GetTargetMethod() {

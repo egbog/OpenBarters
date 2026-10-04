@@ -12,7 +12,7 @@ using UnityEngine.Events;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
-namespace OpenBarters.Patches;
+namespace OpenBarters.Patches.Panel;
 
 public class ShowMultiSelectWindow : ModulePatch {
     public static OpenBarterController? OpenBarter;
