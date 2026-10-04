@@ -11,20 +11,11 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
+using static OpenBarters.Controllers.OpenBarterController;
 
 namespace OpenBarters.Patches.Panel;
 
 public class ShowMultiSelectWindow : ModulePatch {
-    public static OpenBarterController? OpenBarter;
-    public static TradingTable          BarterTradingTable; // our clone
-    public static TradingTableGridView  BarterTradingTableGridView;
-    public static UpdatableToggle?      OpenBarterToggle;
-
-    protected static void ApplyToggle(bool useGrid, Transform requisitesContainer) {
-        requisitesContainer.gameObject.SetActive(!useGrid);
-        BarterTradingTable.gameObject.SetActive(useGrid);
-    }
-
     //traderAssortmentControllerClass.SelectedItemChanged event
     //EFT.UI.BarterSchemePanel.method_01()
     protected override MethodBase GetTargetMethod() {
@@ -36,29 +27,6 @@ public class ShowMultiSelectWindow : ModulePatch {
     [PatchPostfix]
     private static void Postfix(BarterSchemePanel __instance, Assortment ____traderAssortment, InventoryController ____inventoryController,
                                 ref UpdatableToggle ____autoFillRequirements, Transform ____requisitesContainer) {
-        Trader trader = ____traderAssortment._trader;
-
-        // TODO: fix this. we instantiate using current trader, so all other trade windows will use the wrong trader
-        OpenBarter ??= new OpenBarterController(trader.Settings.Id, trader.Settings.Nickname);
-
-        if (OpenBarterToggle == null) {
-            OpenBarterToggle      = Object.Instantiate(____autoFillRequirements, __instance.transform.parent, false);
-            OpenBarterToggle.name = "OpenBarterToggle";
-            RectTransform rt                     = OpenBarterToggle.RectTransform();
-            rt.anchorMin          = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f); // center of the parent
-            rt.anchoredPosition   = new Vector2(-199, 248);
-            OpenBarterToggle.isOn = false;
-
-            // remove auto fill listeners
-            OpenBarterToggle.onValueChanged.RemoveAllListeners();
-
-            // add our toggle listener
-            OpenBarterToggle.onValueChanged.AddListener(useGrid => {
-                ApplyToggle(useGrid, ____requisitesContainer);
-				____traderAssortment.PreparedItemsChanged.Invoke();
-			}); 
-        }
-
         // clone TradingTable
         if (BarterTradingTable == null) {
             TraderDealScreen traderDealScreen = __instance.GetComponentInParent<TraderDealScreen>();
@@ -83,11 +51,6 @@ public class ShowMultiSelectWindow : ModulePatch {
             // reflect the grid view for our clone
             BarterTradingTableGridView = (TradingTableGridView)AccessTools.Field(typeof(TradingTable), "_tableGridView")
                                                                           .GetValue(BarterTradingTable);
-
-            BarterTradingTableGridView.Show(OpenBarter.BarterTableGrid,
-                                            ____traderAssortment,
-                                            ____inventoryController,
-                                            ItemUiContext.Instance);
 
             ScrollRect scroll = BarterTradingTableGridView.GetComponentInParent<ScrollRect>(true);
             scroll.verticalScrollbar.gameObject.SetActive(true);
@@ -115,9 +78,14 @@ public class ShowMultiSelectWindow : ModulePatch {
 
             BarterTradingTable.transform.Find("Trading Table/Border")?.gameObject.SetActive(false);
         }
-
+        
+        if (OpenBarterToggle == null) {
+            return;
+        }
+        
         // enforce toggle state
         bool hasOffer = __instance.SelectedItem != null;
+
         OpenBarterToggle.gameObject.SetActive(hasOffer);
         if (hasOffer) {
             ApplyToggle(OpenBarterToggle.isOn, ____requisitesContainer);

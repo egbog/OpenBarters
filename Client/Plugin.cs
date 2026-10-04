@@ -5,7 +5,7 @@
  * egbog
  * */
 
-using OpenBarters.Patches;
+using OpenBarters.Patches.Panel;
 using BepInEx;
 using BepInEx.Logging;
 
@@ -20,6 +20,7 @@ public class Plugin : BaseUnityPlugin {
         // Plugin startup logic
         Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
 
+        new BuildPanel().Enable();
         new ShowMultiSelectWindow().Enable();
         new CloseMultiSelectWindow ().Enable();
         new HandleItemMove().Enable();

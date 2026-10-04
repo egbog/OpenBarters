@@ -5,6 +5,7 @@ using EFT.UI.DragAndDrop;
 using SPT.Reflection.Patching;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using static OpenBarters.Controllers.OpenBarterController;
 
 namespace OpenBarters.Patches.Panel;
 
@@ -13,7 +14,7 @@ public class HandleItemMove : ModulePatch {
         Item clone = item.CloneItemWithSameId();
         clone.OriginalAddress = item.CurrentAddress;
 
-        ShowMultiSelectWindow.OpenBarter?.Items.Add(clone, item);
+        Current!.Items.Add(clone, item);
 
         return clone;
     }
@@ -28,7 +29,7 @@ public class HandleItemMove : ModulePatch {
     private static bool Prefix(TradingTableGridView __instance, ref Task __result, DragItemContext itemContext,
                                Assortment           ____traderAssortment) {
         // only handle item move for our custom grid view
-        if (__instance != ShowMultiSelectWindow.BarterTradingTableGridView) {
+        if (__instance != BarterTradingTableGridView) {
             return true;
         }
 
@@ -37,9 +38,7 @@ public class HandleItemMove : ModulePatch {
 
         Item clonedItem = CloneForBasket(itemContext.Item, locationInGrid);
 
-        ShowMultiSelectWindow.OpenBarter.TraderController.AddAndRaiseEvents(clonedItem,
-                                                                            ShowMultiSelectWindow.OpenBarter.BarterTableGrid
-                                                                                .CreateItemAddress(locationInGrid));
+        Current!.TraderController.AddAndRaiseEvents(clonedItem, Current.BarterTableGrid.CreateItemAddress(locationInGrid));
 
         itemContext.CloseDependentWindows();
 
@@ -57,10 +56,10 @@ public class HandleItemMoveCanAccept : ModulePatch {
 
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     [PatchPrefix]
-    private static bool Prefix(TradingTableGridView __instance, ref bool       __result, DragItemContext itemContext,
+    private static bool Prefix(TradingTableGridView __instance, ref bool       __result, DragItemContext? itemContext,
                                ref OperationResult  operation,  ref Assortment ____traderAssortment) {
         // only handle item move for our custom grid view
-        if (__instance != ShowMultiSelectWindow.BarterTradingTableGridView) {
+        if (__instance != BarterTradingTableGridView) {
             return true;
         }
 
@@ -69,8 +68,8 @@ public class HandleItemMoveCanAccept : ModulePatch {
         if (itemContext != null /* && ___traderAssortment.CanPrepareItemToSell(itemContext.Item)*/) {
             LocationInGrid locationInGrid = __instance.CalculateItemLocation(itemContext);
             operation = ItemManipulator.Move(itemContext.Item,
-                                             ShowMultiSelectWindow.OpenBarter.BarterTableGrid.CreateItemAddress(locationInGrid),
-                                             ShowMultiSelectWindow.OpenBarter.TraderController,
+                                             Current!.BarterTableGrid.CreateItemAddress(locationInGrid),
+                                             Current.TraderController,
                                              true);
 
             __result = operation.Succeeded;
@@ -92,14 +91,11 @@ public class IsBeingBartered : ModulePatch {
     [PatchPostfix]
     private static void Postfix(Assortment __instance, ref bool __result, Item item) {
         // skip if barter table is not active
-        if (ShowMultiSelectWindow.OpenBarterToggle?.isOn != true) {
+        if (OpenBarterToggle == null || !OpenBarterToggle.isOn) {
             return;
         }
 
         // OR with vanilla's result so items on the real sell table still show as being sold
-
-        __result |= item.GetAllItems()
-                        .Any(subItem => ShowMultiSelectWindow.OpenBarter!.BarterTableGrid.Items
-                                                             .Any(x => subItem.Id == x.Id && subItem != x));
+        __result |= item.GetAllItems().Any(subItem => Current!.BarterTableGrid.Items.Any(x => subItem.Id == x.Id && subItem != x));
     }
 }
