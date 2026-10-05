@@ -23,19 +23,20 @@ public record ModMetadata : IModMetadata {
     public bool                                          HasPrepatcher     { get; init; } = false;
 }
 
-[Injectable(TypePriority = OnLoadOrder.TraderRegistration)]
+[Injectable(TypePriority = OnLoadOrder.TraderRegistration + 1)]
 public class OpenBarters(ISptLogger<OpenBarters> logger, TradersTable tradersTable, TemplateTable templateTable) : IOnLoad {
     public static          bool                                          Debug;
     public static readonly ModMetadata                                   Mod              = new();
     public static          Dictionary<MongoId, Dictionary<MongoId, int>> TraderCategories = new();
 
-	public Task OnLoadAsync(CancellationToken cancellationToken) {
-        //Debug = config.Debug || logger.IsLogEnabled(LogLevel.Debug);
+    private readonly HashSet<MongoId> _rootCategories = [
+        BaseClasses.BUILDING_MATERIAL, BaseClasses.ELECTRONICS, BaseClasses.BATTERY, BaseClasses.LUBRICANT, BaseClasses.MEDICAL_SUPPLIES,
+        BaseClasses.TOOL, BaseClasses.JEWELRY, BaseClasses.HOUSEHOLD_GOODS, BaseClasses.OTHER, BaseClasses.MEDS, BaseClasses.FOOD_DRINK,
+        BaseClasses.KEY, BaseClasses.MOD, BaseClasses.AMMO, BaseClasses.WEAPON, BaseClasses.EQUIPMENT, BaseClasses.INFO
+    ];
 
-        HashSet<MongoId> barterCategories = [
-            BaseClasses.BUILDING_MATERIAL, BaseClasses.ELECTRONICS, BaseClasses.BATTERY, BaseClasses.LUBRICANT,
-            BaseClasses.MEDICAL_SUPPLIES, BaseClasses.TOOL, BaseClasses.JEWELRY, BaseClasses.HOUSEHOLD_GOODS, BaseClasses.OTHER
-        ];
+    public Task OnLoadAsync(CancellationToken cancellationToken) {
+        //Debug = config.Debug || logger.IsLogEnabled(LogLevel.Debug);
 
         foreach (Trader trader in tradersTable.Values) {
             Dictionary<MongoId, int> categories = [];
@@ -46,10 +47,14 @@ public class OpenBarters(ISptLogger<OpenBarters> logger, TradersTable tradersTab
                     continue;
                 }
 
-                if (barterCategories.Contains(template.Parent)) {
-                    if (!categories.TryAdd(template.Parent, 1)) {
-                        categories[template.Parent]++;
-                    }
+                MongoId? root = FindRoot(template);
+
+                if (root == null) {
+                    continue;
+                }
+
+                if (!categories.TryAdd(root.Value, 1)) {
+                    categories[root.Value]++;
                 }
             }
 
@@ -59,6 +64,20 @@ public class OpenBarters(ISptLogger<OpenBarters> logger, TradersTable tradersTab
             }
         }
 
-        return Task.CompletedTask;
+
+		return Task.CompletedTask;
+    }
+
+    private MongoId? FindRoot(TemplateItem template) {
+        MongoId parentId = template.Parent;
+        while (templateTable.Items.TryGetValue(parentId, out TemplateItem? parent)) {
+            if (_rootCategories.Contains(parentId)) {
+                return parentId;
+            }
+
+            parentId = parent.Parent;
+        }
+
+        return null;
     }
 }
