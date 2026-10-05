@@ -28,14 +28,18 @@ implementation methods, not to write the mod for them**.
 ## What this project is
 
 OpenBarters replaces traders' hardcoded barter requirements with **dynamic, value-based bartering**:
-instead of fixed required items, the player may hand over any items whose **BSG `_parent` class**
-matches the original barter's category, as long as their summed **handbook value meets-or-exceeds** the
-received item's handbook value (with an optional balance multiplier).
+instead of fixed required items, the player may hand over any items whose **BSG `_parent` class** is in
+that **trader's allowed category set**, as long as their summed **handbook value meets-or-exceeds** the
+original barter's required items' handbook value (with an optional balance multiplier).
 
-Design decisions locked with the author:
-- Category source = **BSG item parent class** (`TemplateItem.Parent`), inherited from the vanilla
-  barter's required item(s). No curated category lists.
-- Value rule = **meet-or-exceed** the received item's handbook value (`HandbookHelper.GetTemplatePrice`).
+Design decisions locked with the author (full rationale in `PLAN.md` → "Design decisions"):
+- Category source = **per-trader allowed set** of BSG item parent classes (`TemplateItem.Parent` server-side,
+  `ItemTemplate.ParentId` client-side), derived from the categories each trader actually barters in
+  (`traders.md`), **trimmed to specialties (≥10% share), `Other` included** (`traders.md` → "Specialty
+  allow-list"). The server owns the list and the client **fetches it from the server** (one source of truth
+  for both the client gate and server enforcement).
+- Value rule = **meet-or-exceed** target X = the **original required items'** handbook value
+  (`HandbookHelper.GetTemplatePrice` × count, non-currency only) — not the received item's value.
 
 ## Architecture
 
@@ -48,21 +52,25 @@ Two assemblies, two runtimes:
 
 **The SPT server framework is a sibling read-only repo at `../server-csharp`** (the author does not
 commit to it). The server project is registered in `../server-csharp/server-csharp.slnx` under `/Mods/`
-for live debugging. The client's decompiled game reference lives at the sibling `../Decompiled-SPT4.0.0`.
+for live debugging. The client's decompiled game reference lives at the sibling `../Decompiled-SPT4.1.16`.
 
 ### Server mod seams (all defined in `../server-csharp`)
-- **Packaging:** `ModMetadata : AbstractModMetadata` (GUID `com.egbog.openbarters`, `SptVersion ~4.0.0`).
+> **4.1 note:** the framework's library *folders* are now `SPTushonka.*` (namespaces are still
+> `SPTarkov.*`), and `DatabaseService.GetTraders()` is no longer present — tables are injected directly as
+> DI types (e.g. `TradersTable`, `TemplateTable` under `Models/Spt/Tables/`). Seams below marked *(re-verify for 4.1)* were mapped
+> against 4.0 and must be re-checked in source before use.
+
+- **Packaging:** `ModMetadata : AbstractModMetadata` (GUID `com.egbog.openbarters`, `SptVersion ~4.1.0`).
   Canonical pattern: `../server-csharp/Testing/TestMod/TestMod.cs`.
 - **Load hook:** implement `IOnLoad`; order with `[Injectable(TypePriority = OnLoadOrder.PostDBModLoader + 1)]`
-  so the trader DB is already loaded. Reach trader data via `DatabaseService.GetTraders()`
-  (`../server-csharp/Libraries/SPTarkov.Server.Core/Services/DatabaseService.cs:153`) →
-  `trader.Assort.BarterScheme`.
+  so the trader DB is already loaded. Trader data → `trader.Assort.BarterScheme` *(re-verify for 4.1: the
+  4.0 accessor `DatabaseService.GetTraders()` is gone; `Models/Spt/Tables/TradersTable.cs` is the traders table type)*.
 - **DI override:** `[Injectable(TypeOverride = typeof(X))]` swaps a service, but only intercepts
   **virtual** members (see the test mocks under `../server-csharp/Testing/UnitTests/Mock/`).
 - **Patching (the seam that matters here):** the purchase path is non-virtual
   (`PaymentService.PayMoney`, `TradeHelper.BuyItem`), so behavior changes go through Harmony via
   `AbstractPatch`/`PatchManager`
-  (`../server-csharp/Libraries/SPTarkov.Reflection/Patching/AbstractPatch.cs` — "see mod example 6.1").
+  (`../server-csharp/Libraries/SPTushonka.Reflection/Patching/AbstractPatch.cs` — "see mod example 6.1").
   `PatchManager` auto-discovers `AbstractPatch` subclasses in the mod assembly.
 
 ### Barter mechanics in the framework (where to explore)
@@ -91,7 +99,7 @@ Use go-to-definition / find-references under the `Source-Debug` configuration to
 The server can validate and enforce any submission, but **cannot create the item-selection UX** — the
 vanilla client only knows how to render a fixed `barter_scheme`. Letting the player freely pick items by
 category requires the **client (BepInEx) plugin** to build the selection and submit the chosen instance
-ids as `scheme_items`. Those hook points live in the decompiled game (`../Decompiled-SPT4.0.0`), not in
+ids as `scheme_items`. Those hook points live in the decompiled game (`../Decompiled-SPT4.1.16`), not in
 `../server-csharp`. Treat any client-hook claim as unverified until found in that decompiled source.
 
 ## Build, debug, deploy
@@ -109,16 +117,18 @@ reference — live in **`LOCAL.md`**; consult that file for the actual locations
   `Server/PostBuild.ps1` deploys the build into the server's `user/mods` folder — Debug/Release only;
   Source-Debug intentionally does not deploy. Deploy target in `LOCAL.md`.
 - **Build client:** `dotnet build Client/OpenBartersClient.csproj -c Debug`. References the game
-  `Assembly-CSharp`, `spt-reflection`, `spt-common`, Unity, and BepInEx 5. No `Client/PostBuild.ps1`
-  exists yet — the client deploy step is not wired up (intended target noted in `LOCAL.md`).
+  `Assembly-CSharp`, `spt-reflection`, `spt-common`, Unity, and BepInEx 5. `Client/PostBuild.ps1` runs
+  after build (deploy target in `LOCAL.md`).
 - **Verify a run:** launch the SPT server from the framework solution and watch the server log for the
   mod's `OnLoad` output.
 
-## Current scaffold state
-- `Server/OpenBarters.cs`: metadata record + an empty `OnLoad` (`IOnLoad`). The constructor currently
-  injects `CustomItemService` — a leftover from the template; the barter-editing seam uses
-  `DatabaseService` instead (see above).
-- `Client/OpenBarters.cs`: mirror scaffold; not yet a BepInEx plugin entry point.
-- Both projects use the root namespace `_OpenBarters`.
+## Current state
+Progress lives in `PLAN.md` (source of truth). Structural snapshot:
+- **Server** — `Server/OpenBarters.cs`: metadata record + an `IOnLoad` scaffold (still
+  `OnLoadOrder.Preload`; still injects the template-leftover `CustomItemService`). Server work is Phase 6.
+  Root namespace `_OpenBarters`.
+- **Client** — BepInEx plugin (`Client/Plugin.cs` enables the patches). Shared state on
+  `Client/Controllers/OpenBarterController.cs` (`Current` basket instance + UI statics); patches under
+  `Client/Patches/Panel/`. Root namespace `OpenBarters`.
 - Metadata `Url` points at `github.com/egbog/Open-Barters` while the repo is `OpenBarters` — confirm the
   canonical name/URL before release.
