@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using OpenBarters.Controllers;
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
@@ -93,5 +92,7 @@ public class ShowMultiSelectWindow : ModulePatch {
         else {
             BarterTradingTable.gameObject.SetActive(false);
         }
+        
+        Current!.ClearBarterItems();
     }
 }

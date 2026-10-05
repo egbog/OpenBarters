@@ -9,6 +9,8 @@ using static OpenBarters.Controllers.OpenBarterController;
 
 namespace OpenBarters.Patches.Panel;
 
+//TODO: split these patches into separate files
+
 public class HandleItemMove : ModulePatch {
     protected static Item CloneForBasket(Item item, LocationInGrid location) {
         Item clone = item.CloneItemWithSameId();
@@ -65,7 +67,7 @@ public class HandleItemMoveCanAccept : ModulePatch {
 
         // TODO: add parent id filters here to only allow certain items to be moved into the barter table grid view
         // dictionary<traderId, list<parentId>> to filter items by parent id for each trader
-        if (itemContext != null /* && ___traderAssortment.CanPrepareItemToSell(itemContext.Item)*/) {
+        if (itemContext != null && Current!.CanPrepareItemToBarter(itemContext.Item)) {
             LocationInGrid locationInGrid = __instance.CalculateItemLocation(itemContext);
             operation = ItemManipulator.Move(itemContext.Item,
                                              Current!.BarterTableGrid.CreateItemAddress(locationInGrid),
@@ -97,5 +99,23 @@ public class IsBeingBartered : ModulePatch {
 
         // OR with vanilla's result so items on the real sell table still show as being sold
         __result |= item.GetAllItems().Any(subItem => Current!.BarterTableGrid.Items.Any(x => subItem.Id == x.Id && subItem != x));
+    }
+}
+
+public class UnprepareBarterItem : ModulePatch {
+    protected override MethodBase GetTargetMethod() {
+        return typeof(Assortment).GetMethod("UnprepareSellItem", BindingFlags.Instance | BindingFlags.Public);
+    }
+
+    [PatchPrefix]
+    private static bool Prefix(Assortment __instance, Item item) {
+        // skip if item is not in our barter table dictionary
+        if (Current?.Items.ContainsKey(item) != true) {
+            return true;
+        }
+
+        Current!.UnprepareBarterItem(item);
+
+        return false;
     }
 }

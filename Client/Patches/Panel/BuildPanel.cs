@@ -3,6 +3,10 @@ using EFT.Trading;
 using EFT.UI;
 using SPT.Reflection.Patching;
 using System.Reflection;
+using EFT;
+using Newtonsoft.Json;
+using OpenBarters.Controllers;
+using SPT.Common.Http;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using static OpenBarters.Controllers.OpenBarterController;
@@ -24,10 +28,18 @@ public class BuildPanel : ModulePatch {
 
         // this is needed because the listener is created only once and we need to update the assortment for each trader
         // capturing "traderAssortment" instead will only store the first trader's assortment and will not update for subsequent traders
-        TraderAssortment = traderAssortment;
+        OpenBarterController.TraderAssortment = traderAssortment;
+
+
+        // pull our trader info from server
+        if (TraderCategories == null) {
+
+            string json = RequestHandler.GetJson("/openbarters/populatebarterinfo");
+            TraderCategories = JsonConvert.DeserializeObject<Dictionary<MongoID, Dictionary<MongoID, int>>>(json)!;
+        }
 
         // build the toggle button
-        if (OpenBarterToggle == null) {
+    if (OpenBarterToggle == null) {
             OpenBarterToggle      = Object.Instantiate(____autoFillRequirements, __instance.transform.parent, false);
             OpenBarterToggle.name = "OpenBarterToggle";
             RectTransform rt                     = OpenBarterToggle.RectTransform();
@@ -41,7 +53,12 @@ public class BuildPanel : ModulePatch {
             // add our toggle listener
             OpenBarterToggle.onValueChanged.AddListener(useGrid => {
                 ApplyToggle(useGrid, ____requisitesContainer);
-                TraderAssortment?.PreparedItemsChanged.Invoke();
+                if (!useGrid) {
+                    Current!.ClearBarterItems();
+                }
+                else {
+                    OpenBarterController.TraderAssortment?.PreparedItemsChanged.Invoke();
+                }
             });
         }
 

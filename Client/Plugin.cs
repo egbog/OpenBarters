@@ -22,9 +22,10 @@ public class Plugin : BaseUnityPlugin {
 
         new BuildPanel().Enable();
         new ShowMultiSelectWindow().Enable();
-        new CloseMultiSelectWindow ().Enable();
+        new CloseMultiSelectWindow().Enable();
         new HandleItemMove().Enable();
         new HandleItemMoveCanAccept().Enable();
         new IsBeingBartered().Enable();
+        new UnprepareBarterItem().Enable();
     }
 }
