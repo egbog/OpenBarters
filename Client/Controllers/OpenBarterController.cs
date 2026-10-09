@@ -23,9 +23,10 @@ public class OpenBarterController {
 
     public Grid BarterTableGrid;
 
-    public        Dictionary<Item, Item>                         Items = new();
+    public        Dictionary<Item, Item>                         BarterItems = new();
     public        Trader                                         CurrentTrader;
     public static Dictionary<MongoID, Dictionary<MongoID, int>>? TraderCategories;
+    public static int                                            BarterSum = 0;
 
     private OpenBarterController(Trader trader) {
         CurrentTrader = trader;
@@ -54,12 +55,13 @@ public class OpenBarterController {
 
     public void ClearBarterItems() {
         foreach (OperationResult<DiscardResult> operationResult in
-                 Items.Select(kvp => ItemManipulator.Discard(kvp.Key, TraderController, false))) {
+                 BarterItems.Select(kvp => ItemManipulator.Discard(kvp.Key, TraderController, false))) {
             ProcessDiscardResult(operationResult);
         }
 
-        Items.Clear();
+        BarterItems.Clear();
         TraderAssortment?.PreparedItemsChanged.Invoke();
+        TraderAssortment?.PreparedSumChanged.Invoke();
 
         // TODO: use these later for barter item sum
         //this.PreparedSum = default(Trader.ItemPrice);
@@ -71,15 +73,16 @@ public class OpenBarterController {
 
         ProcessDiscardResult(operationResult);
 
-        Items.Remove(item);
+        BarterItems.Remove(item);
         TraderAssortment?.PreparedItemsChanged.Invoke();
+        TraderAssortment?.PreparedSumChanged.Invoke();
 
-        // TODO: use these later for barter item sum
-        //this.PreparedSum = this._trader.GetAssortmentPrice(this.SellingStash).GetValueOrDefault();
-        //this.PreparedSumChanged.Invoke();
-    }
+		// TODO: use these later for barter item sum
+		//this.PreparedSum = this._trader.GetAssortmentPrice(this.SellingStash).GetValueOrDefault();
+		//this.PreparedSumChanged.Invoke();
+	}
 
-    private bool ProcessDiscardResult(OperationResult<DiscardResult> operationResult) {
+	private bool ProcessDiscardResult(OperationResult<DiscardResult> operationResult) {
         if (operationResult.Succeeded) {
             operationResult.Value.RaiseEvents(TraderController, CommandStatus.Begin);
             operationResult.Value.RaiseEvents(TraderController, CommandStatus.Succeed);
@@ -92,21 +95,38 @@ public class OpenBarterController {
         return false;
     }
 
-    public bool CanPrepareItemToBarter(Item item) {
+    /*public bool CanPrepareItemToBarter(Item item) {
         if (item.PinLockState == EItemPinLockState.Locked) {
             return false;
         }
 
-        //Trader.ItemPrice? userItemPrice = this._trader.GetUserItemPrice(item);
-        //return userItemPrice.HasValue && userItemPrice.Value.Amount > 0 && !this.IsBeingSold(item);
-
-        if (item.Template.ParentId == null) {
+        // barter item categories
+        
+        // trader has no barters we track
+		if (!TraderCategories!.TryGetValue(CurrentTrader.Id, out Dictionary<MongoID, int>? categories)) {
             return false;
         }
         
-        Plugin.Log.LogInfo(string.Join(", ", TraderCategories[CurrentTrader.Id].Select(kvp => $"{kvp.Key}: {kvp.Value}")));
 
-        return TraderCategories!.TryGetValue(CurrentTrader.Id, out Dictionary<MongoID, int>? categories) &&
-               categories.ContainsKey(item.Template.ParentId.Value);
-    }
+        // starting point
+        ItemTemplate? node = item.Template.Parent;
+
+        while (node != null) {
+			// return true if we find a parent category that is in the trader's barter categories
+			if (categories.ContainsKey(node._id)) {
+                return true;
+            }
+
+            node = node.Parent;
+        }
+
+        return false;
+
+
+        Trader.ItemPrice? userItemPrice = CurrentTrader.GetUserItemPrice(item);
+        //return userItemPrice.HasValue && userItemPrice.Value.Amount > 0 && !this.IsBeingSold(item);
+
+        //return TraderCategories!.TryGetValue(CurrentTrader.Id, out Dictionary<MongoID, int>? categories) &&
+        //       categories.ContainsKey(item.Template.ParentId.Value);
+    }*/
 }

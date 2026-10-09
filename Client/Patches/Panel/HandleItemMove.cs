@@ -5,6 +5,9 @@ using EFT.UI.DragAndDrop;
 using SPT.Reflection.Patching;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using Comfort.Common;
+using EFT.HandBook;
+using EFT.UI;
 using static OpenBarters.Controllers.OpenBarterController;
 
 namespace OpenBarters.Patches.Panel;
@@ -16,7 +19,7 @@ public class HandleItemMove : ModulePatch {
         Item clone = item.CloneItemWithSameId();
         clone.OriginalAddress = item.CurrentAddress;
 
-        Current!.Items.Add(clone, item);
+        Current!.BarterItems.Add(clone, item);
 
         return clone;
     }
@@ -45,6 +48,7 @@ public class HandleItemMove : ModulePatch {
         itemContext.CloseDependentWindows();
 
         ____traderAssortment.PreparedItemsChanged.Invoke();
+        ____traderAssortment.PreparedSumChanged.Invoke();
 
         __result = Task.CompletedTask;
         return false;
@@ -67,7 +71,7 @@ public class HandleItemMoveCanAccept : ModulePatch {
 
         // TODO: add parent id filters here to only allow certain items to be moved into the barter table grid view
         // dictionary<traderId, list<parentId>> to filter items by parent id for each trader
-        if (itemContext != null && Current!.CanPrepareItemToBarter(itemContext.Item)) {
+        if (itemContext != null && ____traderAssortment.CanPrepareItemToSell(itemContext.Item)) {
             LocationInGrid locationInGrid = __instance.CalculateItemLocation(itemContext);
             operation = ItemManipulator.Move(itemContext.Item,
                                              Current!.BarterTableGrid.CreateItemAddress(locationInGrid),
@@ -110,12 +114,40 @@ public class UnprepareBarterItem : ModulePatch {
     [PatchPrefix]
     private static bool Prefix(Assortment __instance, Item item) {
         // skip if item is not in our barter table dictionary
-        if (Current?.Items.ContainsKey(item) != true) {
+        if (Current?.BarterItems.ContainsKey(item) != true) {
             return true;
         }
 
         Current!.UnprepareBarterItem(item);
 
         return false;
+    }
+}
+
+public class GetBarterSum : ModulePatch {
+    protected override MethodBase GetTargetMethod() {
+        return typeof(TraderDealScreen).GetMethod("TryGetPurchasePrice", BindingFlags.Instance | BindingFlags.Public);
+    }
+
+    [PatchPrefix]
+    private static bool Prefix(out ECurrencyType currency, out int amount) {
+		currency = ECurrencyType.RUB;
+        amount   = 0;
+
+		if (OpenBarterToggle && OpenBarterToggle is { isOn: true }) {
+            foreach (Item item in Current!.BarterItems.Keys) {
+                double totalPrice = item.GetAllItems()
+                                           .Sum(subItem => Singleton<Handbook>.Instance.GetBasePrice(subItem.Template._id) *
+                                                           subItem.StackObjectsCount);
+
+                amount += (int)totalPrice;
+            }
+
+            BarterSum = amount;
+
+            return false;
+        }
+
+        return true;
     }
 }

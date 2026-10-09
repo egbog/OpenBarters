@@ -39,7 +39,7 @@ public class BuildPanel : ModulePatch {
         }
 
         // build the toggle button
-    if (OpenBarterToggle == null) {
+		if (OpenBarterToggle == null) {
             OpenBarterToggle      = Object.Instantiate(____autoFillRequirements, __instance.transform.parent, false);
             OpenBarterToggle.name = "OpenBarterToggle";
             RectTransform rt                     = OpenBarterToggle.RectTransform();
@@ -58,6 +58,7 @@ public class BuildPanel : ModulePatch {
                 }
                 else {
                     OpenBarterController.TraderAssortment?.PreparedItemsChanged.Invoke();
+                    OpenBarterController.TraderAssortment?.PreparedSumChanged.Invoke();
                 }
             });
         }

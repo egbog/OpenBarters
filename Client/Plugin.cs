@@ -27,5 +27,6 @@ public class Plugin : BaseUnityPlugin {
         new HandleItemMoveCanAccept().Enable();
         new IsBeingBartered().Enable();
         new UnprepareBarterItem().Enable();
+        new GetBarterSum().Enable();
     }
 }
