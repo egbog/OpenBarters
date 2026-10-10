@@ -71,7 +71,7 @@ public class HandleItemMoveCanAccept : ModulePatch {
 
         // TODO: add parent id filters here to only allow certain items to be moved into the barter table grid view
         // dictionary<traderId, list<parentId>> to filter items by parent id for each trader
-        if (itemContext != null && ____traderAssortment.CanPrepareItemToSell(itemContext.Item)) {
+        if (itemContext != null && Current!.CanPrepareItemToBarter(itemContext.Item)) {
             LocationInGrid locationInGrid = __instance.CalculateItemLocation(itemContext);
             operation = ItemManipulator.Move(itemContext.Item,
                                              Current!.BarterTableGrid.CreateItemAddress(locationInGrid),
@@ -130,22 +130,20 @@ public class GetBarterSum : ModulePatch {
     }
 
     [PatchPrefix]
-    private static bool Prefix(out ECurrencyType currency, out int amount) {
-		currency = ECurrencyType.RUB;
+    private static bool Prefix(ref bool __result, out ECurrencyType currency, out int amount) {
+        currency = ECurrencyType.RUB;
         amount   = 0;
 
-		if (OpenBarterToggle && OpenBarterToggle is { isOn: true }) {
-            foreach (Item item in Current!.BarterItems.Keys) {
-                double totalPrice = item.GetAllItems()
-                                           .Sum(subItem => Singleton<Handbook>.Instance.GetBasePrice(subItem.Template._id) *
-                                                           subItem.StackObjectsCount);
+        if (OpenBarterToggle && OpenBarterToggle is { isOn: true }) {
+            Trader.ItemPrice itemPrice = Current!.CurrentTrader.GetAssortmentPrice((Stash)Current.TraderController.RootItem).GetValueOrDefault();
+			currency = Current!.CurrentTrader.Settings.Currency;
 
-                amount += (int)totalPrice;
-            }
+			// last basket total shown on the DEAL! button; only refreshed when the price display redraws, so may be stale
+			BarterSum = amount = itemPrice.Amount;
 
-            BarterSum = amount;
+            __result = true;
 
-            return false;
+			return false;
         }
 
         return true;
