@@ -30,5 +30,6 @@ public class Plugin : BaseUnityPlugin {
         new GetBarterSum().Enable();
         new CanBuyBarterRequisite().Enable();
         new RefreshSchemeOnPreparedItemsChanged().Enable();
+        new HideValidDealWarning().Enable();
     }
 }

@@ -3,11 +3,8 @@ using EFT.Trading;
 using EFT.UI;
 using SPT.Reflection.Patching;
 using System.Reflection;
-using EFT;
-using Newtonsoft.Json;
-using OpenBarters.Controllers;
-using SPT.Common.Http;
 using UnityEngine;
+using UnityEngine.UI;
 using Object = UnityEngine.Object;
 using static OpenBarters.Controllers.OpenBarterController;
 
@@ -19,8 +16,8 @@ public class BuildPanel : ModulePatch {
     }
 
     [PatchPrefix]
-    private static bool Prefix(BarterSchemePanel   __instance, Assortment traderAssortment, InventoryController inventoryController,
-                               ref UpdatableToggle ____autoFillRequirements, Transform ____requisitesContainer) {
+    private static bool Prefix(BarterSchemePanel __instance, Assortment traderAssortment, UpdatableToggle ____autoFillRequirements,
+                               Transform         ____requisitesContainer) {
         Trader trader = traderAssortment._trader;
 
         // rebuild our controller for each trader
@@ -28,18 +25,10 @@ public class BuildPanel : ModulePatch {
 
         // this is needed because the listener is created only once and we need to update the assortment for each trader
         // capturing "traderAssortment" instead will only store the first trader's assortment and will not update for subsequent traders
-        OpenBarterController.TraderAssortment = traderAssortment;
-
-
-        // pull our trader info from server
-        if (TraderCategories == null) {
-
-            string json = RequestHandler.GetJson("/openbarters/populatebarterinfo");
-            TraderCategories = JsonConvert.DeserializeObject<Dictionary<MongoID, Dictionary<MongoID, int>>>(json)!;
-        }
+        TraderAssortment = traderAssortment;
 
         // build the toggle button
-		if (OpenBarterToggle == null) {
+        if (OpenBarterToggle == null) {
             OpenBarterToggle      = Object.Instantiate(____autoFillRequirements, __instance.transform.parent, false);
             OpenBarterToggle.name = "OpenBarterToggle";
             RectTransform rt                     = OpenBarterToggle.RectTransform();
@@ -53,12 +42,14 @@ public class BuildPanel : ModulePatch {
             // add our toggle listener
             OpenBarterToggle.onValueChanged.AddListener(useGrid => {
                 ApplyToggle(useGrid, ____requisitesContainer);
+                __instance.UpdateValidDealWarning();
+
                 if (!useGrid) {
                     Current!.ClearBarterItems();
                 }
                 else {
-                    OpenBarterController.TraderAssortment?.PreparedItemsChanged.Invoke();
-                    OpenBarterController.TraderAssortment?.PreparedSumChanged.Invoke();
+                    TraderAssortment?.PreparedItemsChanged.Invoke();
+                    TraderAssortment?.PreparedSumChanged.Invoke();
                 }
             });
         }
@@ -73,6 +64,18 @@ public class BuildPanel : ModulePatch {
                                             ____traderAssortment,
                                             ____inventoryController,
                                             ItemUiContext.Instance);
+
+            var     cloneRt = (RectTransform)BarterTradingTable!.transform;
+            var     areaRt  = (RectTransform)BarterTradingTableGridView.GetComponentInParent<ScrollRect>(true).transform;
+            Vector2 grid    = ((RectTransform)BarterTradingTableGridView.transform).rect.size;
+
+            // the Scroll Area is inset from the clone's edges; add that inset so the whole grid fits inside it
+            Vector2 inset = cloneRt.rect.size - areaRt.rect.size;
+
+            cloneRt.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, grid.x + inset.x);
+            cloneRt.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,   grid.y + inset.y);
+
+            SlotLayout!.preferredHeight = grid.y + inset.y;
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using EFT.Trading;
-using EFT.UI;
+﻿using EFT.UI;
 using SPT.Reflection.Patching;
 using System.Reflection;
 using static OpenBarters.Controllers.OpenBarterController;
@@ -12,12 +11,11 @@ public class CloseMultiSelectWindow : ModulePatch {
     }
 
     [PatchPostfix]
-    private static void Postfix(Assortment? ____traderAssortment) {
-        TradingTable?    tradingTable     = BarterTradingTable;
+    private static void Postfix() {
         UpdatableToggle? openBarterToggle = OpenBarterToggle;
 
-        if (tradingTable != null) {
-            tradingTable.gameObject.SetActive(false);
+        if (BarterGridSlot != null) {
+            BarterGridSlot.gameObject.SetActive(false);
         }
 
         if (BarterTradingTableGridView != null) {
@@ -27,9 +25,6 @@ public class CloseMultiSelectWindow : ModulePatch {
         if (openBarterToggle != null) {
             openBarterToggle.gameObject.SetActive(false);
         }
-
-        // not a Unity object, safe to use conditional access operator
-        //____traderAssortment?.PreparedItemsChanged.Invoke(); // already called in ClearBarterItems()
 
         Current?.ClearBarterItems();
     }

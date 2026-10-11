@@ -5,9 +5,8 @@ using EFT.InventoryLogic;
 using EFT.Trading;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
-using Newtonsoft.Json;
-using SPT.Common.Http;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace OpenBarters.Controllers;
 
@@ -18,15 +17,18 @@ public class OpenBarterController {
     public static TradingTableGridView? BarterTradingTableGridView;
     public static UpdatableToggle?      OpenBarterToggle;
     public static Assortment?           TraderAssortment;
+    public static RectTransform?        BarterGridSlot;
+    public static LayoutElement?        SlotLayout;
+    public static RectTransform?        MainViewport;
+    public static Transform?            ItemsNeededLabel;
 
     public ItemController TraderController;
 
     public Grid BarterTableGrid;
 
-    public        Dictionary<Item, Item>                         BarterItems = new();
-    public        Trader                                         CurrentTrader;
-    public static Dictionary<MongoID, Dictionary<MongoID, int>>? TraderCategories;
-    public static int                                            BarterSum = 0;
+    public        Dictionary<Item, Item> BarterItems = new();
+    public        Trader                 CurrentTrader;
+    public static int                    BarterSum = 0;
 
     private OpenBarterController(Trader trader) {
         CurrentTrader = trader;
@@ -34,7 +36,7 @@ public class OpenBarterController {
         ItemFactory itemFactoryClass = Singleton<ItemFactory>.Instance;
 
         Stash barterStash = itemFactoryClass.CreateFakeStash(null);
-        BarterTableGrid = new Grid("barterTable", 8, 8, false, [], barterStash);
+        BarterTableGrid = new Grid("barterTable", 7, 10, false, [], barterStash);
         barterStash.Grids[0] = BarterTableGrid;
         TraderController = new ItemController(barterStash, trader.Id, trader.Settings.Nickname.Localized(null), true, EOwnerType.Profile);
     }
@@ -46,11 +48,18 @@ public class OpenBarterController {
     }
 
     public static void ApplyToggle(bool useGrid, Transform requisitesContainer) {
-        requisitesContainer.gameObject.SetActive(!useGrid);
+        requisitesContainer.parent.gameObject.SetActive(!useGrid);
 
-        if (BarterTradingTable != null) {
-            BarterTradingTable.gameObject.SetActive(useGrid);
+        // this takes up space we need for our grid and info
+        if (ItemsNeededLabel != null) {
+            ItemsNeededLabel.gameObject.SetActive(!useGrid);
         }
+
+        if (BarterGridSlot != null) {
+            BarterGridSlot.gameObject.SetActive(useGrid);
+        }
+
+        LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)requisitesContainer.parent.parent);
     }
 
     public void ClearBarterItems() {
@@ -62,10 +71,6 @@ public class OpenBarterController {
         BarterItems.Clear();
         TraderAssortment?.PreparedItemsChanged.Invoke();
         TraderAssortment?.PreparedSumChanged.Invoke();
-
-        // TODO: use these later for barter item sum
-        //this.PreparedSum = default(Trader.ItemPrice);
-        //this.PreparedSumChanged.Invoke();
     }
 
     public void UnprepareBarterItem(Item item) {
@@ -93,49 +98,5 @@ public class OpenBarterController {
         Error        error = operationResult.Error;
         Plugin.Log.LogWarning(text + error);
         return false;
-    }
-
-    /*public bool CanPrepareItemToBarter(Item item) {
-        if (item.PinLockState == EItemPinLockState.Locked) {
-            return false;
-        }
-
-        // barter item categories
-
-        // trader has no barters we track
-        if (!TraderCategories!.TryGetValue(CurrentTrader.Id, out Dictionary<MongoID, int>? categories)) {
-            return false;
-        }
-
-
-        // starting point
-        ItemTemplate? node = item.Template.Parent;
-
-        while (node != null) {
-            // return true if we find a parent category that is in the trader's barter categories
-            if (categories.ContainsKey(node._id)) {
-                return true;
-            }
-
-            node = node.Parent;
-        }
-
-        return false;
-
-
-        Trader.ItemPrice? userItemPrice = CurrentTrader.GetUserItemPrice(item);
-        //return userItemPrice.HasValue && userItemPrice.Value.Amount > 0 && !this.IsBeingSold(item);
-
-        //return TraderCategories!.TryGetValue(CurrentTrader.Id, out Dictionary<MongoID, int>? categories) &&
-        //       categories.ContainsKey(item.Template.ParentId.Value);
-    }*/
-
-    public bool CanPrepareItemToBarter(Item item) {
-        if (TraderAssortment!.CanPrepareItemToSell(item)) {
-            return true;
-        }
-
-        return TraderAssortment.CurrentRequisites.Exists(req => item.TemplateId == req.RequiredItem.TemplateId) &&
-               item.PinLockState != EItemPinLockState.Locked && !TraderAssortment.IsBeingSold(item);
     }
 }

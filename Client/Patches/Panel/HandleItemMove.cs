@@ -8,6 +8,7 @@ using System.Reflection;
 using EFT;
 using EFT.UI;
 using OpenBarters.Controllers;
+using UnityEngine;
 using static OpenBarters.Controllers.OpenBarterController;
 
 namespace OpenBarters.Patches.Panel;
@@ -62,15 +63,13 @@ public class HandleItemMoveCanAccept : ModulePatch {
 
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     [PatchPrefix]
-    private static bool Prefix(TradingTableGridView __instance, ref bool       __result, DragItemContext? itemContext,
-                               ref OperationResult  operation,  ref Assortment ____traderAssortment) {
+    private static bool Prefix(TradingTableGridView __instance, ref bool   __result, DragItemContext? itemContext,
+                               ref OperationResult  operation,  Assortment ____traderAssortment) {
         // only handle item move for our custom grid view
         if (__instance != BarterTradingTableGridView) {
             return true;
         }
 
-        // TODO: add parent id filters here to only allow certain items to be moved into the barter table grid view
-        // dictionary<traderId, list<parentId>> to filter items by parent id for each trader
         if (itemContext != null && ____traderAssortment.CanPrepareItemToSell(itemContext.Item)) {
             LocationInGrid locationInGrid = __instance.CalculateItemLocation(itemContext);
             operation = ItemManipulator.Move(itemContext.Item,
@@ -95,7 +94,7 @@ public class IsBeingBartered : ModulePatch {
     }
 
     [PatchPostfix]
-    private static void Postfix(Assortment __instance, ref bool __result, Item item) {
+    private static void Postfix(ref bool __result, Item item) {
         // skip if barter table is not active
         if (OpenBarterToggle == null || !OpenBarterToggle.isOn) {
             return;
@@ -112,7 +111,7 @@ public class UnprepareBarterItem : ModulePatch {
     }
 
     [PatchPrefix]
-    private static bool Prefix(Assortment __instance, Item item) {
+    private static bool Prefix(Item item) {
         // skip if item is not in our barter table dictionary
         if (Current?.BarterItems.ContainsKey(item) != true) {
             return true;
@@ -193,5 +192,18 @@ public class RefreshSchemeOnPreparedItemsChanged : ModulePatch {
         }
 
         __instance.UpdateScheme();
+    }
+}
+
+public class HideValidDealWarning : ModulePatch {
+    protected override MethodBase GetTargetMethod() {
+        return typeof(BarterSchemePanel).GetMethod("UpdateValidDealWarning", BindingFlags.Instance | BindingFlags.Public);
+    }
+
+    [PatchPostfix]
+    private static void Postfix(GameObject ____validSchemeWarning) {
+        if (OpenBarterToggle != null && OpenBarterToggle.isOn) {
+            ____validSchemeWarning.SetActive(false);
+        }
     }
 }
