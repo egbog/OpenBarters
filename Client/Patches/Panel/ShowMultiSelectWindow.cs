@@ -20,7 +20,7 @@ public class ShowMultiSelectWindow : ModulePatch {
 
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     [PatchPostfix]
-    private static void Postfix(BarterSchemePanel __instance, ref UpdatableToggle ____autoFillRequirements,
+    private static void Postfix(BarterSchemePanel __instance,
                                 Transform ____requisitesContainer, ScrollRect ____mainPart) {
         // clone TradingTable
         if (BarterTradingTable == null) {

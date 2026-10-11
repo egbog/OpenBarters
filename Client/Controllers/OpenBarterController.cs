@@ -81,10 +81,6 @@ public class OpenBarterController {
         BarterItems.Remove(item);
         TraderAssortment?.PreparedItemsChanged.Invoke();
         TraderAssortment?.PreparedSumChanged.Invoke();
-
-        // TODO: use these later for barter item sum
-        //this.PreparedSum = this._trader.GetAssortmentPrice(this.SellingStash).GetValueOrDefault();
-        //this.PreparedSumChanged.Invoke();
     }
 
     private bool ProcessDiscardResult(OperationResult<DiscardResult> operationResult) {
