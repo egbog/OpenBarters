@@ -77,12 +77,12 @@ public class OpenBarterController {
         TraderAssortment?.PreparedItemsChanged.Invoke();
         TraderAssortment?.PreparedSumChanged.Invoke();
 
-		// TODO: use these later for barter item sum
-		//this.PreparedSum = this._trader.GetAssortmentPrice(this.SellingStash).GetValueOrDefault();
-		//this.PreparedSumChanged.Invoke();
-	}
+        // TODO: use these later for barter item sum
+        //this.PreparedSum = this._trader.GetAssortmentPrice(this.SellingStash).GetValueOrDefault();
+        //this.PreparedSumChanged.Invoke();
+    }
 
-	private bool ProcessDiscardResult(OperationResult<DiscardResult> operationResult) {
+    private bool ProcessDiscardResult(OperationResult<DiscardResult> operationResult) {
         if (operationResult.Succeeded) {
             operationResult.Value.RaiseEvents(TraderController, CommandStatus.Begin);
             operationResult.Value.RaiseEvents(TraderController, CommandStatus.Succeed);
@@ -101,19 +101,19 @@ public class OpenBarterController {
         }
 
         // barter item categories
-        
+
         // trader has no barters we track
-		if (!TraderCategories!.TryGetValue(CurrentTrader.Id, out Dictionary<MongoID, int>? categories)) {
+        if (!TraderCategories!.TryGetValue(CurrentTrader.Id, out Dictionary<MongoID, int>? categories)) {
             return false;
         }
-        
+
 
         // starting point
         ItemTemplate? node = item.Template.Parent;
 
         while (node != null) {
-			// return true if we find a parent category that is in the trader's barter categories
-			if (categories.ContainsKey(node._id)) {
+            // return true if we find a parent category that is in the trader's barter categories
+            if (categories.ContainsKey(node._id)) {
                 return true;
             }
 
@@ -129,4 +129,13 @@ public class OpenBarterController {
         //return TraderCategories!.TryGetValue(CurrentTrader.Id, out Dictionary<MongoID, int>? categories) &&
         //       categories.ContainsKey(item.Template.ParentId.Value);
     }*/
+
+    public bool CanPrepareItemToBarter(Item item) {
+        if (TraderAssortment!.CanPrepareItemToSell(item)) {
+            return true;
+        }
+
+        return TraderAssortment.CurrentRequisites.Exists(req => item.TemplateId == req.RequiredItem.TemplateId) &&
+               item.PinLockState != EItemPinLockState.Locked && !TraderAssortment.IsBeingSold(item);
+    }
 }
