@@ -13,7 +13,7 @@ using static OpenBarters.Controllers.OpenBarterController;
 
 namespace OpenBarters.Patches.Panel;
 
-public class ShowMultiSelectWindow : ModulePatch {
+public class PanelSelectionPatch : ModulePatch {
     protected override MethodBase GetTargetMethod() {
         return typeof(BarterSchemePanel).GetMethod("SelectedItemChangedHandler", BindingFlags.Instance | BindingFlags.Public);
     }
@@ -78,7 +78,7 @@ public class ShowMultiSelectWindow : ModulePatch {
         bool hasOffer = __instance.SelectedItem != null;
 
         // clear before toggle visibility changes: on deselect, this event fires while the toggle is still
-        // visible, so RefreshSchemeOnPreparedItemsChanged re-greys items the old barter had un-greyed
+        // visible, so RefreshSchemePatch re-greys items the old barter had un-greyed
         Current!.ClearBarterItems();
 
         OpenBarterToggle.gameObject.SetActive(hasOffer);

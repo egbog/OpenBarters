@@ -8,6 +8,9 @@
 using OpenBarters.Patches.Panel;
 using BepInEx;
 using BepInEx.Logging;
+using OpenBarters.Patches.Basket;
+using OpenBarters.Patches.ItemState;
+using OpenBarters.Patches.Pricing;
 
 namespace OpenBarters;
 
@@ -20,16 +23,16 @@ public class Plugin : BaseUnityPlugin {
         // Plugin startup logic
         Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
 
-        new BuildPanel().Enable();
-        new ShowMultiSelectWindow().Enable();
-        new CloseMultiSelectWindow().Enable();
-        new HandleItemMove().Enable();
-        new HandleItemMoveCanAccept().Enable();
-        new IsBeingBartered().Enable();
-        new UnprepareBarterItem().Enable();
-        new GetBarterSum().Enable();
-        new CanBuyBarterRequisite().Enable();
-        new RefreshSchemeOnPreparedItemsChanged().Enable();
-        new HideValidDealWarning().Enable();
+        new PanelShowPatch().Enable();
+        new PanelSelectionPatch().Enable();
+        new PanelClosePatch().Enable();
+        new AcceptItemPatch().Enable();
+        new CanAcceptPatch().Enable();
+        new IsBeingSoldPatch().Enable();
+        new UnprepareItemPatch().Enable();
+        new BasketPricePatch().Enable();
+        new CanBuyRequisitePatch().Enable();
+        new RefreshSchemePatch().Enable();
+        new HideValidDealWarningPatch().Enable();
     }
 }

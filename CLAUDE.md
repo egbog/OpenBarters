@@ -28,18 +28,21 @@ implementation methods, not to write the mod for them**.
 ## What this project is
 
 OpenBarters replaces traders' hardcoded barter requirements with **dynamic, value-based bartering**:
-instead of fixed required items, the player may hand over any items whose **BSG `_parent` class** is in
-that **trader's allowed category set**, as long as their summed **handbook value meets-or-exceeds** the
-original barter's required items' handbook value (with an optional balance multiplier).
+instead of fixed required items, the player may hand over **any item that trader would buy** (i.e. could
+sell to them on the sell tab) **plus the selected barter's own required items**, as long as their summed
+**trader buy value meets-or-exceeds** the original barter's required items' value on the same scale (with an
+optional balance multiplier).
 
 Design decisions locked with the author (full rationale in `PLAN.md` → "Design decisions"):
-- Category source = **per-trader allowed set** of BSG item parent classes (`TemplateItem.Parent` server-side,
-  `ItemTemplate.ParentId` client-side), derived from the categories each trader actually barters in
-  (`traders.md`), **trimmed to specialties (≥10% share), `Other` included** (`traders.md` → "Specialty
-  allow-list"). The server owns the list and the client **fetches it from the server** (one source of truth
-  for both the client gate and server enforcement).
-- Value rule = **meet-or-exceed** target X = the **original required items'** handbook value
-  (`HandbookHelper.GetTemplatePrice` × count, non-currency only) — not the received item's value.
+- Accepted items = **whatever the trader buys** — the trader base's `items_buy` / `items_buy_prohibited`.
+  Client gate reuses vanilla `Assortment.CanPrepareItemToSell(Item)` (pin-lock, `Trader.GetUserItemPrice` →
+  `TraderInfo.CanBuyItem` + price > 0, `!IsBeingSold`). Server enforcement uses `TraderBase.ItemsBuy` /
+  `ItemsBuyProhibited` (pattern: `TradeController` → `ItemHelper.IsOfBaseclasses(tpl, ItemsBuy.Category)`).
+  *(Supersedes the earlier per-trader ≥10%-specialty allow-list from `traders.md`, decided 2026-10-07.)*
+- Value rule = **meet-or-exceed** target X = the **original required items'** value — not the received item's.
+  Scale = **trader buy price** (`Trader.GetUserItemPrice` / `GetAssortmentPrice`) for basket and X alike,
+  non-currency requirements only (*2026-10-10, was handbook*). The selected barter's required items count as
+  buyable/priceable even if the trader normally doesn't buy them.
 
 ## Architecture
 
@@ -124,11 +127,23 @@ reference — live in **`LOCAL.md`**; consult that file for the actual locations
 
 ## Current state
 Progress lives in `PLAN.md` (source of truth). Structural snapshot:
-- **Server** — `Server/OpenBarters.cs`: metadata record + an `IOnLoad` scaffold (still
-  `OnLoadOrder.Preload`; still injects the template-leftover `CustomItemService`). Server work is Phase 6.
-  Root namespace `_OpenBarters`.
-- **Client** — BepInEx plugin (`Client/Plugin.cs` enables the patches). Shared state on
-  `Client/Controllers/OpenBarterController.cs` (`Current` basket instance + UI statics); patches under
-  `Client/Patches/Panel/`. Root namespace `OpenBarters`.
+- **Server** — `Server/OpenBarters.cs`: metadata record + `IOnLoad` (`OnLoadOrder.TraderRegistration + 1`),
+  currently running a per-trader root-category tally served by `Server/StaticRouter.cs`
+  (`/openbarters/populatebarterinfo`) — left over from the superseded ≥10% design and **unused by the client**.
+  Enforcement is Phase 6. Root namespace `_OpenBarters`.
+- **Client** — BepInEx plugin; `Client/Plugin.cs` enables every patch. Root namespace `OpenBarters`;
+  namespaces follow folders. One patch class per file, file named after the class (`<What>Patch`).
+  - `Controllers/` — `OpenBarterController` (`Current` basket instance, basket add/remove/clear, UI statics,
+    `ApplyToggle`); `BarterGridCentering` (MonoBehaviour on the grid slot, re-centres the grid in `LateUpdate`).
+  - `Patches/Panel/` — `BarterSchemePanel` lifecycle/layout: `PanelShowPatch` (`Show` prefix/postfix:
+    per-trader controller, toggle, grid-view `Show` + sizing), `PanelSelectionPatch` (`SelectedItemChangedHandler`:
+    one-time clone/slot build, clear + toggle state per offer), `PanelClosePatch` (`Close`),
+    `HideValidDealWarningPatch` (`UpdateValidDealWarning`).
+  - `Patches/Basket/` — items in/out of the grid: `AcceptItemPatch`, `CanAcceptPatch`
+    (`TradingTableGridView`), `UnprepareItemPatch` (`Assortment.UnprepareSellItem`).
+  - `Patches/ItemState/` — stash item look/eligibility: `IsBeingSoldPatch`, `CanBuyRequisitePatch`
+    (`TraderInfo.CanBuyItem`), `RefreshSchemePatch` (`TradingItemView.CG_NewTradingItemView`).
+  - `Patches/Pricing/` — `BasketPricePatch` (`TraderDealScreen.TryGetPurchasePrice` → DEAL! button total).
+  - New phases slot in as folders (e.g. `Patches/Submit/` for Phase 5).
 - Metadata `Url` points at `github.com/egbog/Open-Barters` while the repo is `OpenBarters` — confirm the
   canonical name/URL before release.

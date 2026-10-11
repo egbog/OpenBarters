@@ -5,7 +5,7 @@ using static OpenBarters.Controllers.OpenBarterController;
 
 namespace OpenBarters.Patches.Panel;
 
-public class CloseMultiSelectWindow : ModulePatch {
+public class PanelClosePatch : ModulePatch {
     protected override MethodBase GetTargetMethod() {
         return typeof(BarterSchemePanel).GetMethod("Close", BindingFlags.Instance | BindingFlags.Public);
     }
