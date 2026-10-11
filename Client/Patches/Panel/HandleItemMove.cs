@@ -5,9 +5,9 @@ using EFT.UI.DragAndDrop;
 using SPT.Reflection.Patching;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using Comfort.Common;
-using EFT.HandBook;
+using EFT;
 using EFT.UI;
+using OpenBarters.Controllers;
 using static OpenBarters.Controllers.OpenBarterController;
 
 namespace OpenBarters.Patches.Panel;
@@ -71,7 +71,7 @@ public class HandleItemMoveCanAccept : ModulePatch {
 
         // TODO: add parent id filters here to only allow certain items to be moved into the barter table grid view
         // dictionary<traderId, list<parentId>> to filter items by parent id for each trader
-        if (itemContext != null && Current!.CanPrepareItemToBarter(itemContext.Item)) {
+        if (itemContext != null && ____traderAssortment.CanPrepareItemToSell(itemContext.Item)) {
             LocationInGrid locationInGrid = __instance.CalculateItemLocation(itemContext);
             operation = ItemManipulator.Move(itemContext.Item,
                                              Current!.BarterTableGrid.CreateItemAddress(locationInGrid),
@@ -135,17 +135,63 @@ public class GetBarterSum : ModulePatch {
         amount   = 0;
 
         if (OpenBarterToggle && OpenBarterToggle is { isOn: true }) {
-            Trader.ItemPrice itemPrice = Current!.CurrentTrader.GetAssortmentPrice((Stash)Current.TraderController.RootItem).GetValueOrDefault();
-			currency = Current!.CurrentTrader.Settings.Currency;
+            Trader.ItemPrice itemPrice = Current!.CurrentTrader.GetAssortmentPrice((Stash)Current.TraderController.RootItem)
+                                                 .GetValueOrDefault();
+            currency = Current!.CurrentTrader.Settings.Currency;
 
-			// last basket total shown on the DEAL! button; only refreshed when the price display redraws, so may be stale
-			BarterSum = amount = itemPrice.Amount;
+            // last basket total shown on the DEAL! button; only refreshed when the price display redraws, so may be stale
+            BarterSum = amount = itemPrice.Amount;
 
             __result = true;
 
-			return false;
+            return false;
         }
 
         return true;
+    }
+}
+
+public class CanBuyBarterRequisite : ModulePatch {
+    protected override MethodBase GetTargetMethod() {
+        return typeof(Profile.TraderInfo).GetMethod("CanBuyItem",
+                                                    BindingFlags.Instance | BindingFlags.Public,
+                                                    null,
+                                                    new[] { typeof(ItemTemplate) },
+                                                    null);
+    }
+
+    [PatchPostfix]
+    private static void Postfix(ref bool __result, Profile.TraderInfo __instance, ItemTemplate itemTemplate) {
+        if (OpenBarterToggle == null || BarterTradingTable == null || Current == null) {
+            return;
+        }
+
+        if (!(OpenBarterToggle.gameObject.activeInHierarchy && OpenBarterToggle.isOn) || !BarterTradingTable.gameObject.activeInHierarchy) {
+            return;
+        }
+
+        if (__instance.Id == Current.CurrentTrader.Id &&
+            OpenBarterController.TraderAssortment!.CurrentRequisites.Exists(req => req.RequiredItem.TemplateId == itemTemplate._id)) {
+            __result = true;
+        }
+    }
+}
+
+public class RefreshSchemeOnPreparedItemsChanged : ModulePatch {
+    protected override MethodBase GetTargetMethod() {
+        return typeof(TradingItemView).GetMethod("CG_NewTradingItemView", BindingFlags.Instance | BindingFlags.Public);
+    }
+
+    [PatchPostfix]
+    private static void Postfix(TradingItemView __instance, bool ___IsKilled) {
+        if (OpenBarterToggle == null || BarterTradingTable == null || Current == null || ___IsKilled) {
+            return;
+        }
+
+        if (!OpenBarterToggle.gameObject.activeInHierarchy) {
+            return;
+        }
+
+        __instance.UpdateScheme();
     }
 }

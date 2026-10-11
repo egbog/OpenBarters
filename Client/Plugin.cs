@@ -28,5 +28,7 @@ public class Plugin : BaseUnityPlugin {
         new IsBeingBartered().Enable();
         new UnprepareBarterItem().Enable();
         new GetBarterSum().Enable();
+        new CanBuyBarterRequisite().Enable();
+        new RefreshSchemeOnPreparedItemsChanged().Enable();
     }
 }

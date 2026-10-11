@@ -77,22 +77,28 @@ public class ShowMultiSelectWindow : ModulePatch {
 
             BarterTradingTable.transform.Find("Trading Table/Border")?.gameObject.SetActive(false);
         }
-        
+
         if (OpenBarterToggle == null) {
             return;
         }
-        
+
         // enforce toggle state
         bool hasOffer = __instance.SelectedItem != null;
 
+        // clear before toggle visibility changes: on deselect, this event fires while the toggle is still
+        // visible, so RefreshSchemeOnPreparedItemsChanged re-greys items the old barter had un-greyed
+        Current!.ClearBarterItems();
+
         OpenBarterToggle.gameObject.SetActive(hasOffer);
+
+        // second refresh once the toggle is visible: selecting an offer from none fires the clear above while
+        // the toggle is still hidden, so un-grey the new barter's required items now
         if (hasOffer) {
             ApplyToggle(OpenBarterToggle.isOn, ____requisitesContainer);
+            TraderAssortment?.PreparedItemsChanged.Invoke();
         }
         else {
             BarterTradingTable.gameObject.SetActive(false);
         }
-        
-        Current!.ClearBarterItems();
     }
 }
