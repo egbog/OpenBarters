@@ -156,12 +156,9 @@ public class PanelSelectionPatch : ModulePatch {
             // second refresh once the toggle is visible. un-greys the new barter's required items
             TraderAssortment?.PreparedItemsChanged.Invoke();
         }
-        else if (hasOffer) {
-            // cash offer
-            ApplyToggle(false, ____requisitesContainer);
-        }
         else {
-            BarterGridSlot.gameObject.SetActive(false);
+            // cash offer or no offer
+            ApplyToggle(false, ____requisitesContainer);
         }
 
         // re-evaluate the warning now that the toggle's visibility is settled (vanilla checked it before we set it)

@@ -10,14 +10,15 @@ public class DealButtonClickPatch : ModulePatch {
         return typeof(TraderDealScreen).GetMethod("OnDealButtonClickAsync", BindingFlags.Instance | BindingFlags.Public);
     }
 
+    // in barter mode, the deal button buys with the basket instead of vanilla's requisites (vanilla would also block on IsValidDeal)
     [PatchPrefix]
     private static bool Prefix(ref Task __result, TraderDealScreen __instance) {
         if (ToggleActive() && __instance.TradeMode == ETradeMode.Purchase) {
-            
-            
-            __result = Current.PurchaseBarter();
+            // must be a Task: the caller runs HandleExceptions() on it
+            __result = Current!.PurchaseBarter();
             return false;
         }
+
         return true;
     }
 }
