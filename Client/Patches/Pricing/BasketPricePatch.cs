@@ -28,7 +28,14 @@ public class BasketPricePatch : ModulePatch {
 
             if (BarterValueLabelText != null) {
                 BarterValueLabelText.text =
-                    $"Required: {CurrencyUtil.GetCurrencyChar(currency)} {TraderDealScreen.FormatPrice(requiredValue)}";
+                    $"Required: {CurrencyUtil.GetCurrencyChar(currency)} {TraderDealScreen.FormatPrice(requiredValue - amount)}";
+                if (amount > requiredValue) {
+                    BarterValueLabelText.text =
+                        $" Overpaying: +{CurrencyUtil.GetCurrencyChar(currency)} {TraderDealScreen.FormatPrice(amount - requiredValue)}";
+                }
+                else if (amount == requiredValue) {
+                    BarterValueLabelText.text = $" Even trade: {CurrencyUtil.GetCurrencyChar(currency)} {TraderDealScreen.FormatPrice(0)}";
+                }
             }
 
             // green when the basket meets the required value, red otherwise
