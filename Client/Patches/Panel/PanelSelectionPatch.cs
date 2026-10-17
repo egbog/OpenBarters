@@ -148,8 +148,6 @@ public class PanelSelectionPatch : ModulePatch {
 
         OpenBarterToggle.gameObject.SetActive(hasOffer && isBarter);
 
-        // second refresh once the toggle is visible: selecting an offer from none fires the clear above while
-        // the toggle is still hidden, so un-grey the new barter's required items now
         if (hasOffer && isBarter) {
             // restore the player's last choice
             ApplyToggle(OpenBarterToggle.isOn, ____requisitesContainer);
