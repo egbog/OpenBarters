@@ -10,6 +10,7 @@ public class PanelClosePatch : ModulePatch {
         return typeof(BarterSchemePanel).GetMethod("Close", BindingFlags.Instance | BindingFlags.Public);
     }
 
+    // leaving buy panel (sell tab, closing screen or switching trader). hide ui and empty basket
     [PatchPostfix]
     private static void Postfix() {
         UpdatableToggle? openBarterToggle = OpenBarterToggle;
@@ -18,6 +19,7 @@ public class PanelClosePatch : ModulePatch {
             BarterGridSlot.gameObject.SetActive(false);
         }
 
+        // pairs with the Show in PanelShowPatch, so view registrations don't pile up
         if (BarterTradingTableGridView != null) {
             BarterTradingTableGridView.Close();
         }

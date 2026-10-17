@@ -21,16 +21,17 @@ public class PanelSelectionPatch : ModulePatch {
         return typeof(BarterSchemePanel).GetMethod("SelectedItemChangedHandler", BindingFlags.Instance | BindingFlags.Public);
     }
 
-    [SuppressMessage("ReSharper", "InconsistentNaming")]
+    // runs on every offer selection, builds ui the first time then enforces toggle state
     [PatchPostfix]
-    private static void Postfix(BarterSchemePanel __instance, Transform ____requisitesContainer, ScrollRect ____mainPart,
-                                GameObject ____validSchemeWarning) {
-        // clone TradingTable
+    private static void Postfix(BarterSchemePanel __instance, Transform ____requisitesContainer, ScrollRect ____mainPart) {
+        // one time setup
         if (BarterTradingTable == null) {
             TraderDealScreen traderDealScreen = __instance.GetComponentInParent<TraderDealScreen>();
             var tradingTable = (TradingTable)AccessTools.Field(typeof(TraderDealScreen), "_tradingTable").GetValue(traderDealScreen);
 
+            // placeholder in the window's layout. centering component keeps the grid on the viewport
             var slot = new GameObject("Barter Grid Slot", typeof(RectTransform), typeof(LayoutElement), typeof(BarterGridCentering)) {
+                // copy the ui layer so the clone renders
                 layer = ____mainPart.content.gameObject.layer
             };
 
@@ -43,6 +44,7 @@ public class PanelSelectionPatch : ModulePatch {
             // this is hidden via HideValidDealWarningPatch
             Transform? validWarning = ____mainPart.content.Find("BarterPanel/ValidWarning");
 
+            // false = keep ui-local position/scale
             slot.transform.SetParent(____mainPart.content, false);
 
             BarterGridSlot = (RectTransform)slot.transform;
@@ -50,9 +52,12 @@ public class PanelSelectionPatch : ModulePatch {
 
             BarterTradingTable      = Object.Instantiate(tradingTable, BarterGridSlot, false);
             BarterTradingTable.name = "Barter Panel";
+
+            // stays active, the slot controls visibility
             BarterTradingTable.gameObject.SetActive(true);
             var cloneRt = (RectTransform)BarterTradingTable.transform;
 
+            // top-center point anchors. fixed size, hangs from the slot's top and spills evenly sideways
             cloneRt.anchorMin        = new Vector2(0.5f, 1.0f);
             cloneRt.anchorMax        = new Vector2(0.5f, 1.0f);
             cloneRt.pivot            = new Vector2(0.5f, 1.0f);
@@ -69,6 +74,7 @@ public class PanelSelectionPatch : ModulePatch {
             BarterTradingTableGridView = (TradingTableGridView)AccessTools.Field(typeof(TradingTable), "_tableGridView")
                                                                           .GetValue(BarterTradingTable);
 
+            // the whole buy window scrolls
             ScrollRect scroll = BarterTradingTableGridView.GetComponentInParent<ScrollRect>(true);
             scroll.enabled = false;
             scroll.verticalScrollbar.gameObject.SetActive(false);
@@ -78,7 +84,7 @@ public class PanelSelectionPatch : ModulePatch {
 
             BarterTradingTable.transform.Find("Trading Table/Border")?.gameObject.SetActive(false);
 
-            // barter value ribbon label
+            // required value ribbon
             if (validWarning != null) {
                 BarterValueRibbon = Object.Instantiate(validWarning, validWarning.parent, false);
 
@@ -98,17 +104,19 @@ public class PanelSelectionPatch : ModulePatch {
                 Transform glow       = BarterValueRibbon.Find("Glow");
 
                 if (background != null) {
+                    // plain rectangle, color comes from the sprite's tint
                     BackgroundRibbon = background.GetComponent<Image>();
                 }
 
                 if (glow != null) {
+                    // glow color is baked into the sprite. must stay white
                     BackgroundGlow       = glow.GetComponent<Image>();
                     BackgroundGlow.color = Color.white;
 
                     // save the red glow for later
                     RedGlowSprite = BackgroundGlow.sprite;
 
-                    // steal sprite for green glow
+                    // steal sprite for green glow. BasketPricePatch hides glow if not found
                     foreach (Sprite sprite in Resources.FindObjectsOfTypeAll<Sprite>()) {
                         if (sprite.name == "status_green_glow") {
                             GreenGlowSprite = sprite;
@@ -130,10 +138,11 @@ public class PanelSelectionPatch : ModulePatch {
         // enforce toggle state
         bool hasOffer = __instance.SelectedItem != null;
 
-        // clear before toggle visibility changes: on deselect, this event fires while the toggle is still
-        // visible, so RefreshSchemePatch re-greys items the old barter had un-greyed
+        // clear before toggle visibility changes: on deselect, this event fires while the toggle is still visible
+        // so RefreshSchemePatch re-greys items the old barter had un-greyed
         Current!.ClearBarterItems();
 
+        // a barter has at least one non-money req. cash offers don't get the toggle
         bool isBarter =
             TraderAssortment?.CurrentRequisites.Any(req => !CurrencyUtil.TryGetCurrencyType(req.RequiredItem.TemplateId, out _)) ?? false;
 
@@ -142,16 +151,20 @@ public class PanelSelectionPatch : ModulePatch {
         // second refresh once the toggle is visible: selecting an offer from none fires the clear above while
         // the toggle is still hidden, so un-grey the new barter's required items now
         if (hasOffer && isBarter) {
+            // restore the player's last choice
             ApplyToggle(OpenBarterToggle.isOn, ____requisitesContainer);
+            // second refresh once the toggle is visible. un-greys the new barter's required items
             TraderAssortment?.PreparedItemsChanged.Invoke();
         }
         else if (hasOffer) {
+            // cash offer
             ApplyToggle(false, ____requisitesContainer);
         }
         else {
             BarterGridSlot.gameObject.SetActive(false);
         }
 
+        // re-evaluate the warning now that the toggle's visibility is settled (vanilla checked it before we set it)
         __instance.UpdateValidDealWarning();
     }
 }

@@ -11,6 +11,7 @@ public class HideValidDealWarningPatch : ModulePatch {
         return typeof(BarterSchemePanel).GetMethod("UpdateValidDealWarning", BindingFlags.Instance | BindingFlags.Public);
     }
 
+    // vanilla reshows this ribbon on every selection or validity change
     [PatchPostfix]
     private static void Postfix(GameObject ____validSchemeWarning) {
         if (ToggleActive()) {
