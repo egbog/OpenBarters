@@ -17,7 +17,7 @@ public class OpenBarterController {
     public static TradingTable?         BarterTradingTable;         // our clone of the sell-tab table
     public static TradingTableGridView? BarterTradingTableGridView; // the clone's grid view (drop target)
     public static UpdatableToggle?      OpenBarterToggle;           // grid switch
-    public static Assortment?           TraderAssortment;           // the current trader's assortment, on every panel Show
+    public static Assortment?           TraderAssortment;           // the current trader's assortment, set on every panel Show
     public static RectTransform?        BarterGridSlot;             // layout placeholder holding the clone inside the buy window
     public static LayoutElement?        SlotLayout;                 // reserves the slot's height in the window's layout
     public static RectTransform?        MainViewport;               // buy window's scroll viewport, used to center the grid
@@ -29,11 +29,11 @@ public class OpenBarterController {
     public static Sprite?               GreenGlowSprite; // status_green_glow, used to indicate sufficient basket value
     public static Sprite?               RedGlowSprite;   // warning_glow
 
-    public ItemController TraderController; // owns the basket's fake stash
+    public ItemController TraderController; // owns the basket's fake stash, not the trader's own controller
 
     public Grid BarterTableGrid;
 
-    public Dictionary<Item, Item> BarterItems = new();
+    public Dictionary<Item, Item> BarterItems = new(); // basket clone to original stash item
     public Trader                 CurrentTrader;
 
     private OpenBarterController(Trader trader) {
@@ -182,8 +182,7 @@ public class OpenBarterController {
                 .. BarterItems.Select(pair => new TradingItemReference { Count = pair.Value.StackObjectsCount, Item = pair.Value })
             ];
 
-            // buying last of the stack, deselect. clears basket
-
+            // buying last of the stack, deselect. clears basket so it must happen after references are created
             if (selectedItem.StackObjectsCount <= quantity) {
                 assortment.SelectItem(null);
             }
@@ -193,7 +192,7 @@ public class OpenBarterController {
             if (result.Succeed) {
                 selectedItem.BuyRestrictionCurrent += quantity;
                 ClearBarterItems();
-                assortment.ClearPreparedItems();
+                assortment.ClearPreparedItems(); // empty the stash items vanilla set aside for its requisites (auto-fill)
                 Singleton<GUISounds>.Instance.PlayUISound(EUISoundType.TradeOperationComplete);
 
                 if (!CurrentTrader.AssortmentLoading) {
@@ -203,6 +202,7 @@ public class OpenBarterController {
             else {
                 int errorCode = result.ErrorCode;
 
+                // Assortment.Purchase keeps the selection for these error codes
                 if (errorCode != 214 && errorCode != 1505) {
                     assortment.SelectItem(null);
 
