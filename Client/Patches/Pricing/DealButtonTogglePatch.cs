@@ -1,0 +1,31 @@
+﻿using EFT.UI;
+using SPT.Reflection.Patching;
+using System.Reflection;
+using EFT.InventoryLogic;
+using EFT.Trading;
+using static OpenBarters.Controllers.OpenBarterController;
+
+namespace OpenBarters.Patches.Pricing;
+
+public class DealButtonTogglePatch : ModulePatch {
+    protected override MethodBase GetTargetMethod() {
+        return typeof(TraderDealScreen).GetMethod("UpdateDealButton", BindingFlags.Instance | BindingFlags.Public);
+    }
+
+    [PatchPostfix]
+    private static void Postfix(TraderDealScreen __instance, DefaultUIButton ____dealButton) {
+        if (OpenBarterToggle && OpenBarterToggle is { isOn: true } && __instance.TradeMode == ETradeMode.Purchase) {
+            Trader     trader = Current!.CurrentTrader;
+            Assortment assortment    = trader.CurrentAssortment;
+            Item       selectedItem  = assortment.SelectedItem;
+
+            bool canTrade = !trader.AssortmentLoading && !assortment.TransactionInProgress && selectedItem != null &&
+                            (assortment.SelectedItemBuyRestrictionMax > selectedItem.BuyRestrictionCurrent ||
+                             selectedItem.BuyRestrictionMax           == 0) && !selectedItem.IsEmptyStack;
+
+            int requiredValue = Current.GetRequiredValue();
+
+            ____dealButton.Interactable = Current.GetBasketValue().Amount >= requiredValue && requiredValue > 0 && canTrade;
+        }
+    }
+}

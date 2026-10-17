@@ -5,6 +5,7 @@ using EFT.InventoryLogic;
 using EFT.Trading;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,6 +22,12 @@ public class OpenBarterController {
     public static LayoutElement?        SlotLayout;
     public static RectTransform?        MainViewport;
     public static Transform?            ItemsNeededLabel;
+    public static Transform?            BarterValueRibbon;
+    public static TextMeshProUGUI?      BarterValueLabelText;
+    public static Image?                BackgroundRibbon;
+    public static Image?                BackgroundGlow;
+    public static Sprite?               GreenGlowSprite;
+    public static Sprite?               RedGlowSprite;
 
     public ItemController TraderController;
 
@@ -28,7 +35,6 @@ public class OpenBarterController {
 
     public        Dictionary<Item, Item> BarterItems = new();
     public        Trader                 CurrentTrader;
-    public static int                    BarterSum = 0;
 
     private OpenBarterController(Trader trader) {
         CurrentTrader = trader;
@@ -57,6 +63,10 @@ public class OpenBarterController {
 
         if (BarterGridSlot != null) {
             BarterGridSlot.gameObject.SetActive(useGrid);
+        }
+
+        if (BarterValueRibbon != null) {
+            BarterValueRibbon.gameObject.SetActive(useGrid);
         }
 
         LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)requisitesContainer.parent.parent);
@@ -94,5 +104,31 @@ public class OpenBarterController {
         Error        error = operationResult.Error;
         Plugin.Log.LogWarning(text + error);
         return false;
+    }
+
+    public int GetRequiredValue() {
+        var requiredValue = 0;
+
+        if (TraderAssortment == null) {
+            return requiredValue;
+        }
+
+        foreach (Requisite req in TraderAssortment.CurrentRequisites) {
+            if (CurrencyUtil.TryGetCurrencyType(req.RequiredItem.TemplateId, out _)) {
+                continue;
+            }
+
+            Trader.ItemPrice? price = CurrentTrader.GetUserItemPrice(req.RequiredItem);
+
+            if (price.HasValue) {
+                requiredValue += price.Value.Amount * req.RequiredItemsCount;
+            }
+        }
+
+        return requiredValue;
+    }
+
+    public Trader.ItemPrice GetBasketValue() {
+        return CurrentTrader.GetAssortmentPrice((Stash)TraderController.RootItem).GetValueOrDefault();
     }
 }

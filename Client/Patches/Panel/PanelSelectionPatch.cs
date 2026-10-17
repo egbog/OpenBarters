@@ -5,6 +5,7 @@ using HarmonyLib;
 using SPT.Reflection.Patching;
 using System.Reflection;
 using OpenBarters.Controllers;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -20,8 +21,8 @@ public class PanelSelectionPatch : ModulePatch {
 
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     [PatchPostfix]
-    private static void Postfix(BarterSchemePanel __instance,
-                                Transform ____requisitesContainer, ScrollRect ____mainPart) {
+    private static void Postfix(BarterSchemePanel __instance, Transform ____requisitesContainer, ScrollRect ____mainPart,
+                                GameObject ____validSchemeWarning) {
         // clone TradingTable
         if (BarterTradingTable == null) {
             TraderDealScreen traderDealScreen = __instance.GetComponentInParent<TraderDealScreen>();
@@ -31,8 +32,14 @@ public class PanelSelectionPatch : ModulePatch {
                 layer = ____mainPart.content.gameObject.layer
             };
 
-            MainViewport     = ____mainPart.viewport;
+            MainViewport = ____mainPart.viewport;
+
+            // requirements text
             ItemsNeededLabel = ____mainPart.content.Find("BarterPanel/Items Needed From Stash");
+
+            // whole ribbon image + text as child
+            // this is hidden via HideValidDealWarningPatch
+            Transform? validWarning = ____mainPart.content.Find("BarterPanel/ValidWarning");
 
             slot.transform.SetParent(____mainPart.content, false);
 
@@ -68,6 +75,50 @@ public class PanelSelectionPatch : ModulePatch {
             }
 
             BarterTradingTable.transform.Find("Trading Table/Border")?.gameObject.SetActive(false);
+
+            // barter value ribbon label
+            if (validWarning != null) {
+                BarterValueRibbon = Object.Instantiate(validWarning, validWarning.parent, false);
+
+                BarterValueLabelText = BarterValueRibbon.GetComponentInChildren<TextMeshProUGUI>(true);
+
+                // the cloned text carries a LocalizedText that rewrites it from its locale key on enable/language change
+                // disable it so our "Required: …" text sticks
+                if (BarterValueLabelText != null) {
+                    if (BarterValueLabelText.TryGetComponent(out LocalizedText localText)) {
+                        localText.enabled = false;
+                    }
+
+                    BarterValueLabelText.fontSize = 20;
+                }
+
+                Transform background = BarterValueRibbon.Find("Background");
+                Transform glow       = BarterValueRibbon.Find("Glow");
+
+                if (background != null) {
+                    BackgroundRibbon = background.GetComponent<Image>();
+                }
+
+                if (glow != null) {
+                    BackgroundGlow       = glow.GetComponent<Image>();
+                    BackgroundGlow.color = Color.white;
+
+                    // save the red glow for later
+                    RedGlowSprite = BackgroundGlow.sprite;
+
+                    // steal sprite for green glow
+                    foreach (Sprite sprite in Resources.FindObjectsOfTypeAll<Sprite>()) {
+                        if (sprite.name == "status_green_glow") {
+                            GreenGlowSprite = sprite;
+                            break;
+                        }
+                    }
+                }
+
+                // enable clone and set sibling index to be after the original ValidWarning
+                BarterValueRibbon.gameObject.SetActive(true);
+                BarterValueRibbon.SetSiblingIndex(validWarning.GetSiblingIndex() + 1);
+            }
         }
 
         if (OpenBarterToggle == null) {

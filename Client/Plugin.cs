@@ -7,22 +7,24 @@
 
 using OpenBarters.Patches.Panel;
 using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using OpenBarters.Patches.Basket;
 using OpenBarters.Patches.ItemState;
 using OpenBarters.Patches.Pricing;
+using UnityEngine;
 
 namespace OpenBarters;
 
 [BepInPlugin("com.egbog.openbarters", PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
 [BepInProcess("EscapeFromTarkov.exe")]
 public class Plugin : BaseUnityPlugin {
-    public static readonly ManualLogSource Log = BepInEx.Logging.Logger.CreateLogSource("OpenBarters");
+    public static readonly ManualLogSource    Log         = BepInEx.Logging.Logger.CreateLogSource("OpenBarters");
 
     private void Awake() {
         // Plugin startup logic
         Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
-
+        
         new PanelShowPatch().Enable();
         new PanelSelectionPatch().Enable();
         new PanelClosePatch().Enable();
@@ -34,5 +36,6 @@ public class Plugin : BaseUnityPlugin {
         new CanBuyRequisitePatch().Enable();
         new RefreshSchemePatch().Enable();
         new HideValidDealWarningPatch().Enable();
+        new DealButtonTogglePatch().Enable();
     }
 }
