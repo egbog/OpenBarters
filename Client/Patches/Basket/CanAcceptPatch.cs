@@ -14,8 +14,8 @@ public class CanAcceptPatch : ModulePatch {
         return typeof(TradingTableGridView).GetMethod("CanAccept", BindingFlags.Instance | BindingFlags.Public);
     }
 
-    [SuppressMessage("ReSharper", "InconsistentNaming")]
-    [PatchPrefix]
+	// decides whether a drag over our grid is allowed (drop works only if this returns true)
+	[PatchPrefix]
     private static bool Prefix(TradingTableGridView __instance, ref bool   __result, DragItemContext? itemContext,
                                ref OperationResult  operation,  Assortment ____traderAssortment) {
         // only handle item move for our custom grid view
@@ -23,9 +23,11 @@ public class CanAcceptPatch : ModulePatch {
             return true;
         }
 
-        if (itemContext != null && ____traderAssortment.CanPrepareItemToSell(itemContext.Item)) {
+		// anything the trader buys, plus this barter's required items (CanBuyRequisitePatch); also rejects items already in the basket
+		if (itemContext != null && ____traderAssortment.CanPrepareItemToSell(itemContext.Item)) {
             LocationInGrid locationInGrid = __instance.CalculateItemLocation(itemContext);
-            operation = ItemManipulator.Move(itemContext.Item,
+			// simulated move (last arg = simulate): only checks that it fits at that spot, nothing actually moves
+			operation = ItemManipulator.Move(itemContext.Item,
                                              Current!.BarterTableGrid.CreateItemAddress(locationInGrid),
                                              Current.TraderController,
                                              true);

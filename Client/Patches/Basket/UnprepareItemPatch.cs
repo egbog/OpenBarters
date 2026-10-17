@@ -11,7 +11,8 @@ public class UnprepareItemPatch : ModulePatch {
         return typeof(Assortment).GetMethod("UnprepareSellItem", BindingFlags.Instance | BindingFlags.Public);
     }
 
-    [PatchPrefix]
+	// right-click / ctrl+click on a basket item goes through vanilla's UnprepareSellItem; route our clones to the basket
+	[PatchPrefix]
     private static bool Prefix(Item item) {
         // skip if item is not in our barter table dictionary
         if (Current?.BarterItems.ContainsKey(item) != true) {

@@ -9,6 +9,7 @@ using static OpenBarters.Controllers.OpenBarterController;
 namespace OpenBarters.Patches.Basket;
 
 public class AcceptItemPatch : ModulePatch {
+    // copy goes in the basket. original stays in stash until purchase is sent
     protected static Item CloneForBasket(Item item) {
         Item clone = item.CloneItemWithSameId();
         clone.OriginalAddress = item.CurrentAddress;
@@ -18,11 +19,11 @@ public class AcceptItemPatch : ModulePatch {
         return clone;
     }
 
+    // drop onto our gid. put a clone in the basket. modelled on PrepareToSell
     protected override MethodBase GetTargetMethod() {
         return typeof(TradingTableGridView).GetMethod("AcceptItem", BindingFlags.Instance | BindingFlags.Public);
     }
-
-    // create and render custom grid view
+    
     [PatchPrefix]
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     private static bool Prefix(TradingTableGridView __instance, ref Task __result, DragItemContext itemContext,
@@ -32,17 +33,20 @@ public class AcceptItemPatch : ModulePatch {
             return true;
         }
 
+        // cell under the cursor
         LocationInGrid locationInGrid = __instance.CalculateItemLocation(itemContext);
+        // the dragged original snaps back to stash
         itemContext.DragCancelled();
 
         Item clonedItem = CloneForBasket(itemContext.Item);
 
         Current!.TraderController.AddAndRaiseEvents(clonedItem, Current.BarterTableGrid.CreateItemAddress(locationInGrid));
 
+        // eg. an open inspect window for the dragged item
         itemContext.CloseDependentWindows();
 
-        ____traderAssortment.PreparedItemsChanged.Invoke();
-        ____traderAssortment.PreparedSumChanged.Invoke();
+        ____traderAssortment.PreparedItemsChanged.Invoke(); // grey out the original
+        ____traderAssortment.PreparedSumChanged.Invoke();   // redraw price + ribbon
 
         __result = Task.CompletedTask;
         return false;
