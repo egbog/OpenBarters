@@ -14,39 +14,41 @@ namespace OpenBarters.Controllers;
 public class OpenBarterController {
     public static OpenBarterController? Current { get; private set; }
 
-    public static TradingTable?         BarterTradingTable; // our clone
-    public static TradingTableGridView? BarterTradingTableGridView;
-    public static UpdatableToggle?      OpenBarterToggle;
-    public static Assortment?           TraderAssortment;
-    public static RectTransform?        BarterGridSlot;
-    public static LayoutElement?        SlotLayout;
-    public static RectTransform?        MainViewport;
-    public static Transform?            ItemsNeededLabel;
-    public static Transform?            BarterValueRibbon;
+    public static TradingTable?         BarterTradingTable;         // our clone of the sell-tab table
+    public static TradingTableGridView? BarterTradingTableGridView; // the clone's grid view (drop target)
+    public static UpdatableToggle?      OpenBarterToggle;           // grid switch
+    public static Assortment?           TraderAssortment;           // the current trader's assortment, on every panel Show
+    public static RectTransform?        BarterGridSlot;             // layout placeholder holding the clone inside the buy window
+    public static LayoutElement?        SlotLayout;                 // reserves the slot's height in the window's layout
+    public static RectTransform?        MainViewport;               // buy window's scroll viewport, used to center the grid
+    public static Transform?            ItemsNeededLabel;           // "required from your stash" label, hidden in barter grid
+    public static Transform?            BarterValueRibbon;          // required value ribbon, clone of ValidWarning
     public static TextMeshProUGUI?      BarterValueLabelText;
     public static Image?                BackgroundRibbon;
     public static Image?                BackgroundGlow;
-    public static Sprite?               GreenGlowSprite;
-    public static Sprite?               RedGlowSprite;
+    public static Sprite?               GreenGlowSprite; // status_green_glow, used to indicate sufficient basket value
+    public static Sprite?               RedGlowSprite;   // warning_glow
 
-    public ItemController TraderController;
+    public ItemController TraderController; // owns the basket's fake stash
 
     public Grid BarterTableGrid;
 
-    public        Dictionary<Item, Item> BarterItems = new();
-    public        Trader                 CurrentTrader;
+    public Dictionary<Item, Item> BarterItems = new();
+    public Trader                 CurrentTrader;
 
     private OpenBarterController(Trader trader) {
         CurrentTrader = trader;
 
         ItemFactory itemFactoryClass = Singleton<ItemFactory>.Instance;
 
+        // fake stash + grid to hold basket clones
         Stash barterStash = itemFactoryClass.CreateFakeStash(null);
-        BarterTableGrid = new Grid("barterTable", 7, 10, false, [], barterStash);
+        BarterTableGrid = new Grid("barterTable", 7, 10, false, [], barterStash); // 7 columns fit buy window's viewport
         barterStash.Grids[0] = BarterTableGrid;
         TraderController = new ItemController(barterStash, trader.Id, trader.Settings.Nickname.Localized(null), true, EOwnerType.Profile);
     }
 
+    // one basket per trader. rebuild when trader changes
     public static void UseTrader(Trader traderToCheck) {
         if (Current == null || Current.CurrentTrader.Id != traderToCheck.Id) {
             Current = new OpenBarterController(traderToCheck);
@@ -54,7 +56,7 @@ public class OpenBarterController {
     }
 
     public static void ApplyToggle(bool useGrid, Transform requisitesContainer) {
-        requisitesContainer.parent.gameObject.SetActive(!useGrid);
+        requisitesContainer.parent.gameObject.SetActive(!useGrid); // ItemsPanel. requisites list
 
         // this takes up space we need for our grid and info
         if (ItemsNeededLabel != null) {
@@ -69,9 +71,11 @@ public class OpenBarterController {
             BarterValueRibbon.gameObject.SetActive(useGrid);
         }
 
+        // rebuild window's content now
         LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)requisitesContainer.parent.parent);
     }
 
+    // empty basket. modelled on Assortment.ClearSellItems
     public void ClearBarterItems() {
         foreach (OperationResult<DiscardResult> operationResult in
                  BarterItems.Select(kvp => ItemManipulator.Discard(kvp.Key, TraderController, false))) {
@@ -79,22 +83,24 @@ public class OpenBarterController {
         }
 
         BarterItems.Clear();
-        TraderAssortment?.PreparedItemsChanged.Invoke();
-        TraderAssortment?.PreparedSumChanged.Invoke();
+        TraderAssortment?.PreparedItemsChanged.Invoke(); // tells stash item views to re-run IsBeingSold, so originals un-grey
+        TraderAssortment?.PreparedSumChanged.Invoke();   // price display + ribbon redraw
     }
 
+    // remove one clone from basket. modelled on Assortment.UnprepareSellItem
     public void UnprepareBarterItem(Item item) {
         OperationResult<DiscardResult> operationResult = ItemManipulator.Discard(item, TraderController, false);
 
         ProcessDiscardResult(operationResult);
 
         BarterItems.Remove(item);
-        TraderAssortment?.PreparedItemsChanged.Invoke();
-        TraderAssortment?.PreparedSumChanged.Invoke();
+        TraderAssortment?.PreparedItemsChanged.Invoke(); // tells stash item views to re-run IsBeingSold, so originals un-grey
+        TraderAssortment?.PreparedSumChanged.Invoke();   // price display + ribbon redraw
     }
 
     private bool ProcessDiscardResult(OperationResult<DiscardResult> operationResult) {
         if (operationResult.Succeeded) {
+            // apply discard to the basket's view
             operationResult.Value.RaiseEvents(TraderController, CommandStatus.Begin);
             operationResult.Value.RaiseEvents(TraderController, CommandStatus.Succeed);
             return true;
@@ -106,6 +112,7 @@ public class OpenBarterController {
         return false;
     }
 
+    // value the basket must reach. the selected barter's non-money requirements at this trader's buy price
     public int GetRequiredValue() {
         var requiredValue = 0;
 
@@ -114,21 +121,109 @@ public class OpenBarterController {
         }
 
         foreach (Requisite req in TraderAssortment.CurrentRequisites) {
+            // skip money reqs
             if (CurrencyUtil.TryGetCurrencyType(req.RequiredItem.TemplateId, out _)) {
                 continue;
             }
 
+            // null if the trader can't price it
+            // CanBuyRequisitePatch makes required items priceable while the barter grid is shown
             Trader.ItemPrice? price = CurrentTrader.GetUserItemPrice(req.RequiredItem);
 
             if (price.HasValue) {
-                requiredValue += price.Value.Amount * req.RequiredItemsCount;
+                requiredValue += price.Value.Amount * req.RequiredItemsCount; // count already includes purchase quantity
             }
         }
 
         return requiredValue;
     }
 
+    // value of the basket at this trader's buy price
     public Trader.ItemPrice GetBasketValue() {
         return CurrentTrader.GetAssortmentPrice((Stash)TraderController.RootItem).GetValueOrDefault();
+    }
+
+    // buy the selected item with the basket's original items. modelled on Assortment.Purchase
+    public async Task PurchaseBarter() {
+        Assortment? assortment = TraderAssortment; // local copy, static can change if trader switches mid request
+        if (assortment == null) {
+            return;
+        }
+
+        if (assortment.TransactionInProgress) {
+            Plugin.Log.LogError("Cannot purchase while transaction is in progress");
+            return;
+        }
+
+        int basketValue   = GetBasketValue().Amount;
+        int requiredValue = GetRequiredValue();
+
+        // re check the deal gate. required value 0 means nothing could be priced
+        if (basketValue < requiredValue || requiredValue <= 0) {
+            Plugin.Log.LogError("Insufficient basket value to complete the barter transaction");
+            return;
+        }
+
+        // snapshot before await
+        Item selectedItem = assortment.SelectedItem;
+        int  quantity     = assortment.CurrentQuantity;
+
+        if (selectedItem == null) {
+            Plugin.Log.LogError("No item selected for purchase");
+            return;
+        }
+
+        // lock trade ui until finally
+        assortment.TransactionInProgress = true;
+
+        try {
+            // pay with the originals
+            TradingItemReference[] references = [
+                .. BarterItems.Select(pair => new TradingItemReference { Count = pair.Value.StackObjectsCount, Item = pair.Value })
+            ];
+
+            // buying last of the stack, deselect. clears basket
+
+            if (selectedItem.StackObjectsCount <= quantity) {
+                assortment.SelectItem(null);
+            }
+
+            IResult result = await assortment._trading.ConfirmPurchase(CurrentTrader.Id, selectedItem.Id, quantity, 0, references);
+
+            if (result.Succeed) {
+                selectedItem.BuyRestrictionCurrent += quantity;
+                ClearBarterItems();
+                assortment.ClearPreparedItems();
+                Singleton<GUISounds>.Instance.PlayUISound(EUISoundType.TradeOperationComplete);
+
+                if (!CurrentTrader.AssortmentLoading) {
+                    await assortment.UpdateAssortment(true);
+                }
+            }
+            else {
+                int errorCode = result.ErrorCode;
+
+                if (errorCode != 214 && errorCode != 1505) {
+                    assortment.SelectItem(null);
+
+                    if (EBackendErrorCode.PriceChanged.EqualsToInt(errorCode) && !CurrentTrader.AssortmentLoading) {
+                        await assortment.UpdateAssortment(true);
+                    }
+                }
+
+                Plugin.Log.LogError($"{result.ErrorCode}: {result.Error}");
+            }
+        }
+        catch (Exception e) {
+            Plugin.Log.LogError(e.ToString());
+        }
+        finally {
+            assortment.TransactionInProgress = false;
+        }
+    }
+
+    // barter mode is on and on screen. isOn stays true while the toggle is hidden for cash offers or the sell tab
+    public static bool ToggleActive() {
+        return OpenBarterToggle && OpenBarterToggle is { isOn: true, gameObject.activeInHierarchy: true };
     }
 }

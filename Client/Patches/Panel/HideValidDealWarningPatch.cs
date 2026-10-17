@@ -13,7 +13,7 @@ public class HideValidDealWarningPatch : ModulePatch {
 
     [PatchPostfix]
     private static void Postfix(GameObject ____validSchemeWarning) {
-        if (OpenBarterToggle != null && OpenBarterToggle.isOn) {
+        if (ToggleActive()) {
             ____validSchemeWarning.SetActive(false);
         }
     }

@@ -4,6 +4,8 @@ using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using System.Reflection;
+using EFT.InventoryLogic;
+using EFT.Trading;
 using OpenBarters.Controllers;
 using TMPro;
 using UnityEngine;
@@ -132,16 +134,24 @@ public class PanelSelectionPatch : ModulePatch {
         // visible, so RefreshSchemePatch re-greys items the old barter had un-greyed
         Current!.ClearBarterItems();
 
-        OpenBarterToggle.gameObject.SetActive(hasOffer);
+        bool isBarter =
+            TraderAssortment?.CurrentRequisites.Any(req => !CurrencyUtil.TryGetCurrencyType(req.RequiredItem.TemplateId, out _)) ?? false;
+
+        OpenBarterToggle.gameObject.SetActive(hasOffer && isBarter);
 
         // second refresh once the toggle is visible: selecting an offer from none fires the clear above while
         // the toggle is still hidden, so un-grey the new barter's required items now
-        if (hasOffer) {
+        if (hasOffer && isBarter) {
             ApplyToggle(OpenBarterToggle.isOn, ____requisitesContainer);
             TraderAssortment?.PreparedItemsChanged.Invoke();
+        }
+        else if (hasOffer) {
+            ApplyToggle(false, ____requisitesContainer);
         }
         else {
             BarterGridSlot.gameObject.SetActive(false);
         }
+
+        __instance.UpdateValidDealWarning();
     }
 }

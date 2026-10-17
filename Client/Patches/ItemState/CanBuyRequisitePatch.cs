@@ -22,7 +22,7 @@ public class CanBuyRequisitePatch : ModulePatch {
             return;
         }
 
-        if (!(OpenBarterToggle.gameObject.activeInHierarchy && OpenBarterToggle.isOn) || !BarterTradingTable.gameObject.activeInHierarchy) {
+        if (!ToggleActive() || !BarterTradingTable.gameObject.activeInHierarchy) {
             return;
         }
 

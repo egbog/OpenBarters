@@ -18,10 +18,10 @@ public class BasketPricePatch : ModulePatch {
         currency = ECurrencyType.RUB;
         amount   = 0;
 
-        if (OpenBarterToggle && OpenBarterToggle is { isOn: true }) {
+        if (ToggleActive()) {
             //Trader.ItemPrice itemPrice = Current!.CurrentTrader.GetAssortmentPrice((Stash)Current.TraderController.RootItem)
             //                                     .GetValueOrDefault();
-            currency = Current!.CurrentTrader.Settings.Currency;
+            currency = Current.CurrentTrader.Settings.Currency;
             
             amount = Current.GetBasketValue().Amount;
 

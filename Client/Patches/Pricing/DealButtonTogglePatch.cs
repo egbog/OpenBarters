@@ -14,8 +14,8 @@ public class DealButtonTogglePatch : ModulePatch {
 
     [PatchPostfix]
     private static void Postfix(TraderDealScreen __instance, DefaultUIButton ____dealButton) {
-        if (OpenBarterToggle && OpenBarterToggle is { isOn: true } && __instance.TradeMode == ETradeMode.Purchase) {
-            Trader     trader = Current!.CurrentTrader;
+        if (ToggleActive() && __instance.TradeMode == ETradeMode.Purchase) {
+            Trader     trader = Current.CurrentTrader;
             Assortment assortment    = trader.CurrentAssortment;
             Item       selectedItem  = assortment.SelectedItem;
 

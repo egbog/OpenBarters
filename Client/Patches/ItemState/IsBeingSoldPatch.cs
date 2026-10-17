@@ -14,11 +14,11 @@ public class IsBeingSoldPatch : ModulePatch {
     [PatchPostfix]
     private static void Postfix(ref bool __result, Item item) {
         // skip if barter table is not active
-        if (OpenBarterToggle == null || !OpenBarterToggle.isOn) {
+        if (!ToggleActive()) {
             return;
         }
 
         // OR with vanilla's result so items on the real sell table still show as being sold
-        __result |= item.GetAllItems().Any(subItem => Current!.BarterTableGrid.Items.Any(x => subItem.Id == x.Id && subItem != x));
+        __result |= item.GetAllItems().Any(subItem => Current.BarterTableGrid.Items.Any(x => subItem.Id == x.Id && subItem != x));
     }
 }
