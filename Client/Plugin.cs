@@ -24,7 +24,6 @@ public class Plugin : BaseUnityPlugin {
     public static readonly ManualLogSource Log = BepInEx.Logging.Logger.CreateLogSource("OpenBarters");
 
     private void Awake() {
-        // Plugin startup logic
         Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
 
         new PanelShowPatch().Enable();
@@ -43,7 +42,7 @@ public class Plugin : BaseUnityPlugin {
         new ControlClickPatch().Enable();
 
         if (Chainloader.PluginInfos.ContainsKey("com.tyfon.uifixes")) {
-            new UIFixesPatch().Enable();
+            new UIFixesAutoSwitchPatch().Enable();
         }
     }
 }

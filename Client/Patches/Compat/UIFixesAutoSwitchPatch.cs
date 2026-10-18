@@ -2,8 +2,6 @@
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using System.Reflection;
-using BepInEx.Bootstrap;
-using BepInEx.Configuration;
 using EFT.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -11,7 +9,7 @@ using static OpenBarters.Controllers.OpenBarterController;
 
 namespace OpenBarters.Patches.Compat;
 
-public class UIFixesPatch : ModulePatch {
+public class UIFixesAutoSwitchPatch : ModulePatch {
     private static bool _wasInteractable;
     private static Tab? _sellTab; // set only while a barter ctrl+click is in progress
 
@@ -33,8 +31,8 @@ public class UIFixesPatch : ModulePatch {
             return true;
         }
 
-		// block UIFixes' auto-switch for this click only
-		_sellTab = screen._sellTab;
+        // block UIFixes' auto-switch for this click only
+        _sellTab         = screen._sellTab;
         _wasInteractable = _sellTab.Interactable;
         _sellTab.SetInteractable(false);
         return true;
