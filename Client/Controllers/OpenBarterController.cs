@@ -1,6 +1,7 @@
 ﻿using Comfort.Common;
 using Diz.LanguageExtensions;
 using EFT;
+using EFT.HandBook;
 using EFT.InventoryLogic;
 using EFT.Trading;
 using EFT.UI;
@@ -136,6 +137,16 @@ public class OpenBarterController {
         foreach (Requisite req in TraderAssortment.CurrentRequisites) {
             // skip money reqs
             if (CurrencyUtil.TryGetCurrencyType(req.RequiredItem.TemplateId, out _)) {
+                continue;
+            }
+
+            // include level of req item in pricing, required for things like dogtags
+            if (req.RequiredItem.TryGetItemComponent(out DogtagComponent _)) {
+                double basePrice = Singleton<Handbook>.Instance.GetBasePrice(req.RequiredItem.TemplateId);
+                // convert into trader currency
+                double convertedPrice = basePrice /
+                                        CurrentTrader.CurrencyCourses[CurrencyUtil.GetCurrencyId(CurrentTrader.Settings.Currency)];
+                requiredValue += (int)(convertedPrice * req.Level * req.RequiredItemsCount);
                 continue;
             }
 
