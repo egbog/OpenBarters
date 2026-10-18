@@ -7,7 +7,6 @@ using EFT.InventoryLogic;
 using OpenBarters.Controllers;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 using static OpenBarters.Controllers.OpenBarterController;
