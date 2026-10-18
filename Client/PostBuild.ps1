@@ -2,14 +2,18 @@ param (
 	[string]$DebugType,
 	[string]$AssemblyName,
     [string]$Configuration,
-	[string]$Framework
+	[string]$Framework,
+	[string]$SptInstallPath
 )
 
 $scriptDir = $PSScriptRoot
 $sourceFilesRelease = @("$AssemblyName.dll")
 $sourceFilesDebug = @("$AssemblyName.dll", "$AssemblyName.pdb", "$AssemblyName.dll.mdb")
-$activeSourceFiles
-$sptInstallPath = "E:\games\SPT 4.1.x dev"
+$sptInstallPath = $SptInstallPath
+if (-not $sptInstallPath) {
+    Write-Host "SPT_INSTALL_PATH not set, skipping deploy"
+    exit 0
+}
 $sptClientModsPath = Join-Path $sptInstallPath "BepInEx\plugins"
 $pdb2mdb = Join-Path $scriptDir "pdb2mdb.exe"
 
@@ -39,6 +43,10 @@ switch ($Configuration) {
 		$modOutput = Join-Path $scriptDir "bin\Release\$Framework"
 		$activeSourceFiles = $sourceFilesRelease
 	}
+	'Source-Debug' {
+        Write-Host "Source-Debug: skipping deploy"
+        exit 0
+    }
     default   {
         Write-Host "Unknown configuration: $Configuration"
         exit 1
