@@ -1,11 +1,9 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using EFT.UI;
+﻿using EFT.UI;
 using EFT.UI.DragAndDrop;
 using HarmonyLib;
 using SPT.Reflection.Patching;
 using System.Reflection;
 using EFT.InventoryLogic;
-using EFT.Trading;
 using OpenBarters.Controllers;
 using TMPro;
 using UnityEngine;

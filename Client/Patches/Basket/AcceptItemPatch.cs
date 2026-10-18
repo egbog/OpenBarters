@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using EFT.InventoryLogic;
-using EFT.Trading;
 using EFT.UI.DragAndDrop;
 using SPT.Reflection.Patching;
 using static OpenBarters.Controllers.OpenBarterController;

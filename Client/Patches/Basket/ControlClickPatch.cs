@@ -2,7 +2,6 @@
 using EFT.Communications;
 using EFT.InventoryLogic;
 using EFT.Trading;
-using EFT.UI;
 using SPT.Reflection.Patching;
 using static OpenBarters.Controllers.OpenBarterController;
 
