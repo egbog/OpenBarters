@@ -43,6 +43,7 @@ public class Plugin : BaseUnityPlugin {
 
         if (Chainloader.PluginInfos.ContainsKey("com.tyfon.uifixes")) {
             new UIFixesAutoSwitchPatch().Enable();
+            new UIFixesMultiSelectPatch().Enable();
         }
     }
 }

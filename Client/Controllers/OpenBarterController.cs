@@ -101,6 +101,11 @@ public class OpenBarterController {
 
     // copy goes in the basket. original stays in stash until purchase is sent. modelled on PrepareToSell
     public void PrepareBarterItem(Item item, LocationInGrid location, int count) {
+		// already in the basket, e.g. our drop and UIFixes' multi-select both placing the dragged item
+		if (BarterItems.ContainsValue(item)) {
+            return;
+        }
+
         Item clone = item.CloneItemWithSameId();
         clone.OriginalAddress   = item.CurrentAddress;
         clone.StackObjectsCount = count;
