@@ -126,7 +126,7 @@ public class OpenBarterController {
         return false;
     }
 
-    // value the basket must reach. the selected barter's non-money requirements at this trader's buy price
+    // value the basket must reach. the selected barter's non-money requirements at handbook value, converted to trader currency
     public int GetRequiredValue() {
         var requiredValue = 0;
 
@@ -134,28 +134,26 @@ public class OpenBarterController {
             return requiredValue;
         }
 
+        double currencyRate = CurrentTrader.CurrencyCourses[CurrencyUtil.GetCurrencyId(CurrentTrader.Settings.Currency)];
+
         foreach (Requisite req in TraderAssortment.CurrentRequisites) {
             // skip money reqs
             if (CurrencyUtil.TryGetCurrencyType(req.RequiredItem.TemplateId, out _)) {
                 continue;
             }
 
+            double basePrice      = Singleton<Handbook>.Instance.GetBasePrice(req.RequiredItem.TemplateId);
+            // convert into trader currency
+            double convertedPrice = basePrice / currencyRate;
+
+            convertedPrice *= req.RequiredItemsCount;
+
             // include level of req item in pricing, required for things like dogtags
             if (req.RequiredItem.TryGetItemComponent(out DogtagComponent _)) {
-                double basePrice = Singleton<Handbook>.Instance.GetBasePrice(req.RequiredItem.TemplateId);
-                // convert into trader currency
-                double convertedPrice = basePrice /
-                                        CurrentTrader.CurrencyCourses[CurrencyUtil.GetCurrencyId(CurrentTrader.Settings.Currency)];
-                requiredValue += (int)(convertedPrice * req.Level * req.RequiredItemsCount);
-                continue;
+                requiredValue += (int)(convertedPrice * req.Level);
             }
-
-            // null if the trader can't price it
-            // CanBuyRequisitePatch makes required items priceable while the barter grid is shown
-            Trader.ItemPrice? price = CurrentTrader.GetUserItemPrice(req.RequiredItem);
-
-            if (price.HasValue) {
-                requiredValue += price.Value.Amount * req.RequiredItemsCount; // count already includes purchase quantity
+            else {
+                requiredValue += (int)convertedPrice;
             }
         }
 
