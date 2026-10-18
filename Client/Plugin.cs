@@ -29,7 +29,6 @@ public class Plugin : BaseUnityPlugin {
         new PanelShowPatch().Enable();
         new PanelSelectionPatch().Enable();
         new PanelClosePatch().Enable();
-        new CanAcceptPatch().Enable();
         new IsBeingSoldPatch().Enable();
         new UnprepareItemPatch().Enable();
         new BasketPricePatch().Enable();
