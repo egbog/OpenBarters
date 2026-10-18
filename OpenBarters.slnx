@@ -4,9 +4,6 @@
     <BuildType Name="Release" />
     <BuildType Name="Source-Debug" />
   </Configurations>
-  <Project Path="Server/OpenBartersServer.csproj">
-    <Build Solution="Source-Debug|*" Project="false" />
-  </Project>
   <Project Path="Client/OpenBartersClient.csproj">
     <Build Solution="Source-Debug|*" Project="false" />
   </Project>
