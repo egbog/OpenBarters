@@ -100,9 +100,10 @@ public class OpenBarterController {
     }
 
     // copy goes in the basket. original stays in stash until purchase is sent. modelled on PrepareToSell
-    public void PrepareBarterItem(Item item, LocationInGrid location) {
+    public void PrepareBarterItem(Item item, LocationInGrid location, int count) {
         Item clone = item.CloneItemWithSameId();
-        clone.OriginalAddress = item.CurrentAddress;
+        clone.OriginalAddress   = item.CurrentAddress;
+        clone.StackObjectsCount = count;
 
         BarterItems.Add(clone, item);
 
@@ -201,7 +202,7 @@ public class OpenBarterController {
         try {
             // pay with the originals
             TradingItemReference[] references = [
-                .. BarterItems.Select(pair => new TradingItemReference { Count = pair.Value.StackObjectsCount, Item = pair.Value })
+                .. BarterItems.Select(pair => new TradingItemReference { Count = pair.Key.StackObjectsCount, Item = pair.Value })
             ];
 
             // buying last of the stack, deselect. clears basket so it must happen after references are created

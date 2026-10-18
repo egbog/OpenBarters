@@ -29,7 +29,7 @@ public class ControlClickPatch : ModulePatch {
         GridItemAddress? gridItemAddress = Current!.BarterTableGrid.FindLocationForItem(item);
 
         if (gridItemAddress != null) {
-            Current.PrepareBarterItem(item, gridItemAddress.LocationInGrid);
+            Current.PrepareBarterItem(item, gridItemAddress.LocationInGrid, item.StackObjectsCount);
 
             __result = true;
             return false;

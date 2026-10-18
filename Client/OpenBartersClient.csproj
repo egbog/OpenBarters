@@ -55,6 +55,7 @@
 	<Reference Include="spt-common" />
 	<Reference Include="Sirenix.Serialization" />
 	<Reference Include="Unity.TextMeshPro" />
+	<Reference Include="UnityEngine.InputLegacyModule" />
   </ItemGroup>
   
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

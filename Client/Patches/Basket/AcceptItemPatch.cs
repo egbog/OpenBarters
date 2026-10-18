@@ -1,19 +1,22 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
-using EFT.InventoryLogic;
+﻿using EFT.InventoryLogic;
+using EFT.UI;
 using EFT.UI.DragAndDrop;
 using SPT.Reflection.Patching;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
+using EFT;
+using UnityEngine;
 using static OpenBarters.Controllers.OpenBarterController;
 
 namespace OpenBarters.Patches.Basket;
 
 public class AcceptItemPatch : ModulePatch {
-    // copy goes in the basket. original stays in stash until purchase is sent
-    
+    // drop onto our grid. put a clone in the basket
+
     protected override MethodBase GetTargetMethod() {
         return typeof(TradingTableGridView).GetMethod("AcceptItem", BindingFlags.Instance | BindingFlags.Public);
     }
-    
+
     [PatchPrefix]
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     private static bool Prefix(TradingTableGridView __instance, ref Task __result, DragItemContext itemContext) {
@@ -27,10 +30,26 @@ public class AcceptItemPatch : ModulePatch {
         // the dragged original snaps back to stash
         itemContext.DragCancelled();
 
-        Current!.PrepareBarterItem(itemContext.Item, locationInGrid);
+        Item item = itemContext.Item;
 
         // eg. an open inspect window for the dragged item
         itemContext.CloseDependentWindows();
+
+        // open split dialog if being used
+        if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && item.StackObjectsCount > 1) {
+            SplitDialog splitDialog = ItemUiContext.Instance.SplitDialog;
+            splitDialog.Show("Split".Localized(null).ToUpper(),
+                             item.StackObjectsCount,
+                             Input.mousePosition,
+                             count => {
+                                 splitDialog.Hide();
+                                 Current!.PrepareBarterItem(item, locationInGrid, count);
+                             },
+                             splitDialog.Hide);
+        }
+        else {
+            Current!.PrepareBarterItem(item, locationInGrid, item.StackObjectsCount);
+        }
 
         __result = Task.CompletedTask;
         return false;
