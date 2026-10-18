@@ -5,17 +5,20 @@
  * egbog
  * */
 
-using OpenBarters.Patches.Panel;
 using BepInEx;
+using BepInEx.Bootstrap;
 using BepInEx.Logging;
 using OpenBarters.Patches.Basket;
+using OpenBarters.Patches.Compat;
 using OpenBarters.Patches.ItemState;
+using OpenBarters.Patches.Panel;
 using OpenBarters.Patches.Pricing;
 using OpenBarters.Patches.Submit;
 
 namespace OpenBarters;
 
 [BepInPlugin("com.egbog.openbarters", PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+[BepInDependency("com.tyfon.uifixes", BepInDependency.DependencyFlags.SoftDependency)]
 [BepInProcess("EscapeFromTarkov.exe")]
 public class Plugin : BaseUnityPlugin {
     public static readonly ManualLogSource Log = BepInEx.Logging.Logger.CreateLogSource("OpenBarters");
@@ -38,5 +41,9 @@ public class Plugin : BaseUnityPlugin {
         new DealButtonTogglePatch().Enable();
         new DealButtonClickPatch().Enable();
         new ControlClickPatch().Enable();
+
+        if (Chainloader.PluginInfos.ContainsKey("com.tyfon.uifixes")) {
+            new UIFixesPatch().Enable();
+        }
     }
 }
