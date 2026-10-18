@@ -21,6 +21,7 @@ public class ControlClickPatch : ModulePatch {
             return true;
         }
 
+        // not accepted or already in the grid
         if (!__instance.CanPrepareItemToSell(item) || __instance.IsBeingSold(item)) {
             __result = false;
             return false;
