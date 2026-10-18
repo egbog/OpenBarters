@@ -29,7 +29,6 @@ public class Plugin : BaseUnityPlugin {
         new PanelShowPatch().Enable();
         new PanelSelectionPatch().Enable();
         new PanelClosePatch().Enable();
-        new AcceptItemPatch().Enable();
         new CanAcceptPatch().Enable();
         new IsBeingSoldPatch().Enable();
         new UnprepareItemPatch().Enable();
@@ -41,10 +40,10 @@ public class Plugin : BaseUnityPlugin {
         new DealButtonClickPatch().Enable();
         new ControlClickPatch().Enable();
         new SkipAddListenerOnClonePatch().Enable();
+        new PrepareToSellPatch().Enable();
 
         if (Chainloader.PluginInfos.ContainsKey("com.tyfon.uifixes")) {
             new UIFixesAutoSwitchPatch().Enable();
-            new UIFixesMultiSelectPatch().Enable();
         }
     }
 }
