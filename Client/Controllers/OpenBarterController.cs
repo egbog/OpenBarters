@@ -98,6 +98,19 @@ public class OpenBarterController {
         TraderAssortment?.PreparedSumChanged.Invoke();   // price display + ribbon redraw
     }
 
+    // copy goes in the basket. original stays in stash until purchase is sent. modelled on PrepareToSell
+    public void PrepareBarterItem(Item item, LocationInGrid location) {
+        Item clone = item.CloneItemWithSameId();
+        clone.OriginalAddress = item.CurrentAddress;
+
+        BarterItems.Add(clone, item);
+
+        TraderController.AddAndRaiseEvents(clone, BarterTableGrid.CreateItemAddress(location));
+
+        TraderAssortment?.PreparedItemsChanged.Invoke(); // grey out the original
+        TraderAssortment?.PreparedSumChanged.Invoke();   // redraw price + ribbon
+    }
+
     private bool ProcessDiscardResult(OperationResult<DiscardResult> operationResult) {
         if (operationResult.Succeeded) {
             // apply discard to the basket's view

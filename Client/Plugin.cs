@@ -37,5 +37,6 @@ public class Plugin : BaseUnityPlugin {
         new HideValidDealWarningPatch().Enable();
         new DealButtonTogglePatch().Enable();
         new DealButtonClickPatch().Enable();
+        new ControlClickPatch().Enable();
     }
 }
