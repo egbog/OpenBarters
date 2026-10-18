@@ -61,13 +61,6 @@ public class PanelSelectionPatch : ModulePatch {
             cloneRt.pivot            = new Vector2(0.5f, 1.0f);
             cloneRt.anchoredPosition = Vector2.zero;
 
-            // remove listener from the clone to prevent interference with the original TradingTable
-            var clearButton = (DefaultUIButton)AccessTools.Field(typeof(TradingTable), "_clearTableButton").GetValue(BarterTradingTable);
-            var cloneHandler = (UnityAction)Delegate.CreateDelegate(typeof(UnityAction),
-                                                                    BarterTradingTable,
-                                                                    AccessTools.Method(typeof(TradingTable), "CG_Awake"));
-            clearButton.OnClick.RemoveListener(cloneHandler);
-
             // reflect the grid view for our clone
             BarterTradingTableGridView = (TradingTableGridView)AccessTools.Field(typeof(TradingTable), "_tableGridView")
                                                                           .GetValue(BarterTradingTable);

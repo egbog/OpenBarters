@@ -40,6 +40,7 @@ public class Plugin : BaseUnityPlugin {
         new DealButtonTogglePatch().Enable();
         new DealButtonClickPatch().Enable();
         new ControlClickPatch().Enable();
+        new SkipAddListenerOnClonePatch().Enable();
 
         if (Chainloader.PluginInfos.ContainsKey("com.tyfon.uifixes")) {
             new UIFixesAutoSwitchPatch().Enable();
