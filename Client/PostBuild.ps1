@@ -3,18 +3,33 @@ param (
 	[string]$AssemblyName,
     [string]$Configuration,
 	[string]$Framework,
-	[string]$SptInstallPath
+	[string]$SptInstallPath,
+	[string]$Version
 )
 
 $scriptDir = $PSScriptRoot
 $sourceFilesRelease = @("$AssemblyName.dll")
 $sourceFilesDebug = @("$AssemblyName.dll", "$AssemblyName.pdb", "$AssemblyName.dll.mdb")
-$sptInstallPath = $SptInstallPath
-if (-not $sptInstallPath) {
-    Write-Host "SPT_INSTALL_PATH not set, skipping deploy"
+
+# Release: package BepInEx/plugins/OpenBarters/<dll> into dist/OpenBarters-<version>.zip
+if ($Configuration -eq 'Release') {
+	$distDir    = Join-Path $scriptDir "dist"
+	$stagingDir = Join-Path $distDir "staging"
+	$pluginDir  = Join-Path $stagingDir "BepInEx\plugins\OpenBarters"
+
+	Remove-Item $stagingDir -Recurse -Force -ErrorAction SilentlyContinue
+	New-Item -ItemType Directory -Path $pluginDir -Force | Out-Null
+	Copy-Item (Join-Path $scriptDir "bin\Release\$Framework\$AssemblyName.dll") $pluginDir -Force -ErrorAction Stop
+
+	Compress-Archive -Path (Join-Path $stagingDir "BepInEx") -DestinationPath (Join-Path $distDir "OpenBarters-$Version.zip") -Force
+	Write-Host "Packaged dist\OpenBarters-$Version.zip"
+}
+
+if (-not $SptInstallPath) {
+    Write-Host "SptInstallPath not set, skipping deploy"
     exit 0
 }
-$sptClientModsPath = Join-Path $sptInstallPath "BepInEx\plugins"
+$sptClientModsPath = Join-Path $SptInstallPath "BepInEx\plugins"
 $pdb2mdb = Join-Path $scriptDir "pdb2mdb.exe"
 
 Write-Host ""
