@@ -44,5 +44,28 @@ Compatible with [UI Fixes](https://github.com/tyfon7/UIFixes):
 - Multi-select drags into the grid work, multi-selected stacks go in whole
 - "Autoswitch Buy/Sell when Trading" won't switch to the sell tab on barter Ctrl+clicks
 
+## Building
+
+1. Install the [.NET SDK](https://dotnet.microsoft.com/download) (8 or newer).
+2. Create a `Client/dependencies` folder and copy these into it:
+   - From `<SPT install>/EscapeFromTarkov_Data/Managed`: `Assembly-CSharp.dll`, `Comfort.dll`, `ItemComponent.Types.dll`, `Sirenix.Serialization.dll`, `Unity.TextMeshPro.dll`, `UnityEngine.dll`, `UnityEngine.CoreModule.dll`, `UnityEngine.UI.dll`, `UnityEngine.UIModule.dll`, `UnityEngine.InputLegacyModule.dll`
+   - From `<SPT install>/BepInEx/plugins/spt`: `spt-common.dll`, `spt-reflection.dll`
+3. (Optional) To deploy straight into your game on every build, create `Client/OpenBartersClient.csproj.user`:
+   ```xml
+   <Project>
+     <PropertyGroup>
+       <SptInstallPath>C:\path\to\your\SPT</SptInstallPath>
+     </PropertyGroup>
+   </Project>
+   ```
+   Without it, the build still works, it just doesn't copy anything.
+4. Build:
+   - `dotnet build Client -c Debug` builds and deploys with debug symbols
+   - `dotnet build Client -c Release` also packages `Client/dist/OpenBarters-<version>.zip`
+
+Both `Client/dependencies` and the `.user` file are gitignored.
+
+There's also a `Source-Debug` configuration that references a decompiled `Assembly-CSharp` project at `../Decompiled-SPT4.1.6/Assembly-CSharp` instead of the dll, so go-to-definition lands in readable source. It's only for browsing, it doesn't deploy.
+
 ## Credits
 Includes `MultiSelectInterop.cs` from [UI Fixes](https://github.com/tyfon7/UIFixes) by Tyfon (MIT).
