@@ -69,3 +69,14 @@ There's also a `Source-Debug` configuration that references a decompiled `Assemb
 
 ## Credits
 Includes `MultiSelectInterop.cs` from [UI Fixes](https://github.com/tyfon7/UIFixes) by Tyfon (MIT).
+
+## AI Disclosure
+This README was written with the help of AI (Claude).
+
+The mod's code was written by me. AI was used as a research and review tool along the way:
+- Digging through the decompiled game and SPT server source to find where to hook in, and explaining how those parts of the game work
+- Reviewing my code as I wrote it, catching bugs and checking that it builds
+- Suggesting small fixes and short example snippets, which I adapted
+- Keeping the project's planning notes and docs up to date
+
+Every patch was written, tested in game and debugged by me.
