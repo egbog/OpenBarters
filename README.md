@@ -25,9 +25,24 @@ Same rules as selling apply, so containers need to be empty and worn out items a
 
 ## How value works
 - The barter's value is the handbook value of the items it originally asks for, in the trader's currency. Dogtags are multiplied by the required level.
-- Your items are valued at what the trader would pay you for them, the same price you see on the sell tab (condition and loyalty level included).
+- Matching original requirements are credited at their handbook value, up to the requested quantity. Matching uses the game's barter rules, including dogtag level and side, encoded state, and weapon functionality.
+- Everything else, including surplus items of a requested type, is valued at what the trader would pay you for it on the sell tab (condition and loyalty level included).
+- Only the missing part of the original requirements receives the configurable substitute price multiplier (default **1.5**).
+- A zero or missing dogtag minimum level uses level 1 for valuation, so an unrestricted dogtag barter cannot become unpriced. The game's original level/side matching rules still apply.
 
-Since traders never pay full value, bartering with substitutes always costs a bit more than bringing the exact items. Lore-wise, think of it as the trader marking up the deal for not getting what they actually wanted.
+For example, a barter has requirements worth 10,000 roubles. You provide matching requirements worth 4,000. With a multiplier of 1.5, substitute items must have a combined sell-tab value of at least `(10,000 - 4,000) * 1.5 = 9,000` roubles. Bringing all the required items incurs no markup.
+
+Matching requirements first reduce the amount that needs substituting. The ribbon shows the remaining substitute cost or overpayment; the price above DEAL shows the sell-tab value of the substitutes and surplus. Bringing all exact requirements leaves zero substitute cost. The same calculation controls the button and is checked again before purchase.
+
+## Configuration
+
+In the **F12** configuration manager, open **OpenBarters > Pricing > Substitute price multiplier** (range **1–10**, default **1.5**). It is also saved in `BepInEx/config/com.egbog.openbarters.cfg`.
+
+- **1**: no additional markup on substitutes; they are still valued at the trader's sell-tab price.
+- **1.5**: 50% markup on the missing part.
+- **2**: double the value of the missing part.
+
+Changes apply immediately to an open barter. The normal barter with the toggle off and cash offers are unchanged.
 
 ## Installation
 Extract the zip into your SPT folder (the one with `EscapeFromTarkov.exe`). You should end up with `BepInEx/plugins/OpenBarters/OpenBarters.dll`.
@@ -66,6 +81,10 @@ Compatible with [UI Fixes](https://github.com/tyfon7/UIFixes):
 Both `Client/dependencies` and the `.user` file are gitignored.
 
 There's also a `Source-Debug` configuration that references a decompiled `Assembly-CSharp` project at `../Decompiled-SPT4.1.6/Assembly-CSharp` instead of the dll, so go-to-definition lands in readable source. It's only for browsing, it doesn't deploy.
+
+### Pricing checks
+
+With the .NET 8 SDK or newer, run `dotnet run --project Tests -c Release`. These checks do not require game DLLs. They cover partial and full substitution, exact-item credit, surplus and partial stacks, purchase quantities, currency rounding, and overlapping requirements.
 
 ## Credits
 Includes `MultiSelectInterop.cs` from [UI Fixes](https://github.com/tyfon7/UIFixes) by Tyfon (MIT).

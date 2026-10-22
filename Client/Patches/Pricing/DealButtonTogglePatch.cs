@@ -25,10 +25,8 @@ public class DealButtonTogglePatch : ModulePatch {
                             (assortment.SelectedItemBuyRestrictionMax > selectedItem.BuyRestrictionCurrent ||
                              selectedItem.BuyRestrictionMax           == 0) && !selectedItem.IsEmptyStack;
 
-            int requiredValue = Current.GetRequiredValue();
-
             // computed fresh: this runs before the price display updates in OnPriceChanged
-            ____dealButton.Interactable = Current.GetBasketValue().Amount >= requiredValue && requiredValue > 0 && canTrade;
+            ____dealButton.Interactable = Current.GetBarterValue().CanTrade && canTrade;
         }
     }
 }
