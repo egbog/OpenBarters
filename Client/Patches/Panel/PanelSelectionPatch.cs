@@ -26,8 +26,10 @@ public class PanelSelectionPatch : ModulePatch {
             TraderDealScreen traderDealScreen = __instance.GetComponentInParent<TraderDealScreen>();
             var tradingTable = (TradingTable)AccessTools.Field(typeof(TraderDealScreen), "_tradingTable").GetValue(traderDealScreen);
 
+            SellTab = traderDealScreen._sellTab;
+
             // placeholder in the window's layout. centering component keeps the grid on the viewport
-            var slot = new GameObject("Barter Grid Slot", typeof(RectTransform), typeof(LayoutElement), typeof(BarterGridCentering)) {
+			var slot = new GameObject("Barter Grid Slot", typeof(RectTransform), typeof(LayoutElement), typeof(BarterGridCentering)) {
                 // copy the ui layer so the clone renders
                 layer = ____mainPart.content.gameObject.layer
             };

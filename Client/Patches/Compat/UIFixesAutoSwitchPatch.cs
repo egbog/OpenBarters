@@ -11,7 +11,7 @@ namespace OpenBarters.Patches.Compat;
 
 public class UIFixesAutoSwitchPatch : ModulePatch {
     private static bool _wasInteractable;
-    private static Tab? _sellTab; // set only while a barter ctrl+click is in progress
+    private static bool _disabledThisClick; // our prefix turned the sell tab off for the current click
 
     protected override MethodBase GetTargetMethod() {
         return typeof(TradingItemView).GetMethod("OnClick", BindingFlags.Instance | BindingFlags.Public);
@@ -26,26 +26,29 @@ public class UIFixesAutoSwitchPatch : ModulePatch {
             return true;
         }
 
-        TraderDealScreen screen = __instance.GetComponentInParent<TraderDealScreen>();
-        if (screen == null) {
+        if (SellTab == null) {
             return true;
         }
 
         // block UIFixes' auto-switch for this click only
-        _sellTab         = screen._sellTab;
-        _wasInteractable = _sellTab.Interactable;
-        _sellTab.SetInteractable(false);
+        _wasInteractable = SellTab.Interactable;
+        SellTab.SetInteractable(false);
+        _disabledThisClick = true;
         return true;
     }
 
     [PatchPostfix]
     private static void Postfix() {
-        if (_sellTab == null) {
+        // restore only what our prefix changed
+        if (!_disabledThisClick) {
             return;
         }
 
-        // restore state after this method & prefixes finish
-        _sellTab.SetInteractable(_wasInteractable);
-        _sellTab = null;
+        _disabledThisClick = false;
+
+        if (SellTab != null) {
+            // restore state after this method & prefixes finish
+            SellTab.SetInteractable(_wasInteractable);
+        }
     }
 }

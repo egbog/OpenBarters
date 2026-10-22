@@ -29,6 +29,7 @@ public class OpenBarterController {
     public static Image?                BackgroundGlow;
     public static Sprite?               GreenGlowSprite; // status_green_glow, used to indicate sufficient basket value
     public static Sprite?               RedGlowSprite;   // warning_glow
+    public static Tab?     SellTab;
 
     public ItemController TraderController; // owns the basket's fake stash, not the trader's own controller
 
