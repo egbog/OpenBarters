@@ -29,7 +29,7 @@ public class PanelSelectionPatch : ModulePatch {
             SellTab = traderDealScreen._sellTab;
 
             // placeholder in the window's layout. centering component keeps the grid on the viewport
-			var slot = new GameObject("Barter Grid Slot", typeof(RectTransform), typeof(LayoutElement), typeof(BarterGridCentering)) {
+            var slot = new GameObject("Barter Grid Slot", typeof(RectTransform), typeof(LayoutElement), typeof(BarterGridCentering)) {
                 // copy the ui layer so the clone renders
                 layer = ____mainPart.content.gameObject.layer
             };
@@ -132,7 +132,13 @@ public class PanelSelectionPatch : ModulePatch {
 
         // clear before toggle visibility changes: on deselect, this event fires while the toggle is still visible
         // so RefreshSchemePatch re-greys items the old barter had un-greyed
-        Current!.ClearBarterItems();
+        // an exception from a refresh handler (e.g. pricing) must not skip the toggle update below
+        try {
+            Current!.ClearBarterItems();
+        }
+        catch (Exception ex) {
+            Plugin.Log.LogError(ex);
+        }
 
         // a barter has at least one non-money req. cash offers don't get the toggle
         bool isBarter =
@@ -151,7 +157,7 @@ public class PanelSelectionPatch : ModulePatch {
             ApplyToggle(false, ____requisitesContainer);
         }
 
-        // re-evaluate the warning now that the toggle's visibility is settled (vanilla checked it before we set it)
+        // re-evaluate the warning now that the toggle's visibility is settled (it was checked before we set the toggle)
         __instance.UpdateValidDealWarning();
     }
 }
