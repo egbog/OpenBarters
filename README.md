@@ -28,6 +28,7 @@ Same rules as selling apply, so containers need to be empty and worn out items a
 - Matching original requirements are credited at their handbook value, up to the requested quantity. Matching uses the game's barter rules, including dogtag level and side, encoded state, and weapon functionality.
 - Everything else, including surplus items of a requested type, is valued at what the trader would pay you for it on the sell tab (condition and loyalty level included).
 - Only the missing part of the original requirements receives the configurable substitute price multiplier (default **1.5**).
+- A zero or missing dogtag minimum level uses level 1 for valuation, so an unrestricted dogtag barter cannot become unpriced. The game's original level/side matching rules still apply.
 
 For example, a barter has requirements worth 10,000 roubles. You provide matching requirements worth 4,000. With a multiplier of 1.5, substitute items must have a combined sell-tab value of at least `(10,000 - 4,000) * 1.5 = 9,000` roubles. Bringing all the required items incurs no markup.
 

@@ -150,10 +150,9 @@ public class OpenBarterController {
 
         for (int requirement = 0; requirement < requisites.Length; requirement++) {
             Requisite req = requisites[requirement];
-            double unitValue = Singleton<Handbook>.Instance.GetBasePrice(req.RequiredItem.TemplateId) / currencyRate;
-            if (req.IsDogtagRequired) {
-                unitValue *= req.Level;
-            }
+            double unitValue = BarterPricing.GetRequiredUnitValue(
+                Singleton<Handbook>.Instance.GetBasePrice(req.RequiredItem.TemplateId), currencyRate,
+                req.IsDogtagRequired ? req.Level : 1);
             // RequiredItemsCount already includes the selected purchase quantity.
             requirements[requirement] = new BarterPricing.Requirement(req.RequiredItemsCount, unitValue);
             for (int offer = 0; offer < items.Length; offer++) {

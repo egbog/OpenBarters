@@ -2,6 +2,10 @@ namespace OpenBarters.Pricing;
 
 // Independent of the game objects so quantity allocation and rounding can be tested directly.
 internal static class BarterPricing {
+    // A zero/missing minimum level means any dogtag level, not an item worth zero.
+    public static double GetRequiredUnitValue(double handbookPrice, double currencyRate, int minimumDogtagLevel = 1) =>
+        handbookPrice / currencyRate * Math.Max(1, minimumDogtagLevel);
+
     internal readonly struct Requirement(int count, double unitValue) {
         public int Count { get; } = count;
         public double UnitValue { get; } = unitValue;

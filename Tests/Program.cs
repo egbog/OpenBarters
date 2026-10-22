@@ -49,6 +49,14 @@ Check("basket insertion order does not change surplus credit", [new(1, 100), new
       [new(1, 10), new(1, 1000)], new[,] {{true, true}, {false, false}}, 1.5f, 150, 1000, true);
 Check("reassign earlier match instead of consuming expensive surplus", [new(1, 300), new(1, 100)],
       [new(1, 1), new(1, 100), new(1, 3)], new[,] {{true, false, true}, {true, true, false}}, 1.5f, 0, 100, true);
+Check("zero-level dogtag remains payable with substitutes", [new(2, GetRequiredUnitValue(900, 1, 0))],
+      [new(1, 2700)], new bool[1, 1], 1.5f, 2700, 2700, true);
+Check("zero-level dogtag exact item closes its requirement", [new(1, GetRequiredUnitValue(900, 1, 0))],
+      [new(1, 500)], new[,] {{true}}, 1.5f, 0, 0, true);
+Check("level-qualified dogtag retains its original valuation", [new(1, GetRequiredUnitValue(900, 1, 50))],
+      [new(1, 67500)], new bool[1, 1], 1.5f, 67500, 67500, true);
+Check("zero-level dogtag currency conversion", [new(2, GetRequiredUnitValue(900, 150, 0))],
+      [new(1, 18)], new bool[1, 1], 1.5f, 18, 18, true);
 
 // Compare the allocation against exhaustive enumeration, including overlapping requirements
 // and stacks. This catches double credit and order-dependent greedy matching failures.
@@ -75,7 +83,7 @@ for (int trial = 0; trial < 600; trial++) {
     }
     passed++;
 }
-Console.WriteLine($"PASS: {passed} pricing checks (27 scenarios and 600 exhaustive allocation comparisons).");
+Console.WriteLine($"PASS: {passed} pricing checks (31 scenarios and 600 exhaustive allocation comparisons).");
 
 void Check(string name, Requirement[] requirements, Offer[] offers, bool[,] matches, float multiplier,
            int required, int basket, bool canTrade) {

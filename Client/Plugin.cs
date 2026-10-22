@@ -40,6 +40,7 @@ public class Plugin : BaseUnityPlugin {
         };
 
         Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+        Logger.LogInfo($"Partial substitution pricing active; multiplier={SubstitutePriceMultiplier.Value}; zero-level dogtag valuation protected.");
 
         new PanelShowPatch().Enable();
         new PanelSelectionPatch().Enable();
