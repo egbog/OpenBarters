@@ -6,6 +6,7 @@ using EFT.InventoryLogic;
 using EFT.Trading;
 using EFT.UI;
 using EFT.UI.DragAndDrop;
+using OpenBarters.Pricing;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -133,43 +134,39 @@ public class OpenBarterController {
         return false;
     }
 
-    // value the basket must reach. the selected barter's non-money requirements at handbook value, converted to trader currency
-    public int GetRequiredValue() {
-        var requiredValue = 0;
-
+    // Credit exact requirements at handbook value; apply the multiplier only to the missing part.
+    internal BarterPricing.Result GetBarterValue() {
         if (TraderAssortment == null) {
-            return requiredValue;
+            return default;
         }
 
         double currencyRate = CurrentTrader.CurrencyCourses[CurrencyUtil.GetCurrencyId(CurrentTrader.Settings.Currency)];
+        Requisite[] requisites = TraderAssortment.CurrentRequisites
+            .Where(req => !CurrencyUtil.TryGetCurrencyType(req.RequiredItem.TemplateId, out _)).ToArray();
+        Item[] items = BarterItems.Keys.ToArray();
+        var requirements = new BarterPricing.Requirement[requisites.Length];
+        var offers = new BarterPricing.Offer[items.Length];
+        var matches = new bool[requisites.Length, items.Length];
 
-        foreach (Requisite req in TraderAssortment.CurrentRequisites) {
-            // skip money reqs
-            if (CurrencyUtil.TryGetCurrencyType(req.RequiredItem.TemplateId, out _)) {
-                continue;
-            }
-
-            double basePrice      = Singleton<Handbook>.Instance.GetBasePrice(req.RequiredItem.TemplateId);
-            // convert into trader currency
-            double convertedPrice = basePrice / currencyRate;
-
-            convertedPrice *= req.RequiredItemsCount;
-
-            // include level of req item in pricing, required for things like dogtags
-            if (req.RequiredItem.TryGetItemComponent(out DogtagComponent _)) {
-                requiredValue += (int)(convertedPrice * req.Level);
-            }
-            else {
-                requiredValue += (int)convertedPrice;
+        for (int requirement = 0; requirement < requisites.Length; requirement++) {
+            Requisite req = requisites[requirement];
+            double unitValue = BarterPricing.GetRequiredUnitValue(
+                Singleton<Handbook>.Instance.GetBasePrice(req.RequiredItem.TemplateId), currencyRate,
+                req.IsDogtagRequired ? req.Level : 1);
+            // RequiredItemsCount already includes the selected purchase quantity.
+            requirements[requirement] = new BarterPricing.Requirement(req.RequiredItemsCount, unitValue);
+            for (int offer = 0; offer < items.Length; offer++) {
+                // Includes dogtag level/side, encoded state and functional weapon checks.
+                matches[requirement, offer] = req.IsRequired(items[offer]);
             }
         }
 
-        return requiredValue;
-    }
-
-    // value of the basket at this trader's buy price
-    public Trader.ItemPrice GetBasketValue() {
-        return CurrentTrader.GetAssortmentPrice((Stash)TraderController.RootItem).GetValueOrDefault();
+        for (int offer = 0; offer < items.Length; offer++) {
+            Item item = items[offer];
+            offers[offer] = new BarterPricing.Offer(item.StackObjectsCount,
+                CurrentTrader.GetUserItemPrice(item).GetValueOrDefault().Amount);
+        }
+        return BarterPricing.Calculate(requirements, offers, matches, Plugin.SubstitutePriceMultiplier.Value);
     }
 
     // buy the selected item with the basket's original items. modelled on Assortment.Purchase
@@ -184,11 +181,8 @@ public class OpenBarterController {
             return;
         }
 
-        int basketValue   = GetBasketValue().Amount;
-        int requiredValue = GetRequiredValue();
-
-        // re check the deal gate. required value 0 means nothing could be priced
-        if (basketValue < requiredValue || requiredValue <= 0) {
+        // Recheck the same valuation used by the ribbon and deal button immediately before sending.
+        if (!GetBarterValue().CanTrade) {
             Plugin.Log.LogError("Insufficient basket value to complete the barter transaction");
             return;
         }
