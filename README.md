@@ -67,6 +67,12 @@ Both `Client/dependencies` and the `.user` file are gitignored.
 
 There's also a `Source-Debug` configuration that references a decompiled `Assembly-CSharp` project at `../Decompiled-SPT4.1.6/Assembly-CSharp` instead of the dll, so go-to-definition lands in readable source. It's only for browsing, it doesn't deploy.
 
+## Contributing
+
+AI generated code will not be merged. The first reason being that I will not allow the codebase to become convoluted with complicated code no one understands. Secondly, this repo must stay aligned with the SPT Forge's stance on AI mods. 
+
+Using AI tools to assist in research, implementation and debugging is expected and acceptable. However, it is also expected that you explicitly disclose the usage of AI in any code included in a PR
+
 ## Credits
 Includes `MultiSelectInterop.cs` from [UI Fixes](https://github.com/tyfon7/UIFixes) by Tyfon (MIT).
 
