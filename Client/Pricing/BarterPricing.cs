@@ -16,11 +16,11 @@ internal static class BarterPricing {
         public int SellValue { get; } = sellValue;
     }
 
-    internal readonly struct Result(int requiredValue, int basketValue, bool hasRequirements) {
+    internal readonly struct Result(int requiredValue, int basketValue, bool isValid) {
         public int RequiredValue { get; } = requiredValue;
         public int BasketValue { get; } = basketValue;
-        public bool HasRequirements { get; } = hasRequirements;
-        public bool CanTrade => HasRequirements && BasketValue >= RequiredValue;
+        public bool IsValid { get; } = isValid;
+        public bool CanTrade => IsValid && BasketValue >= RequiredValue;
     }
 
     public static Result Calculate(IReadOnlyList<Requirement> requirements, IReadOnlyList<Offer> offers,
@@ -32,24 +32,7 @@ internal static class BarterPricing {
         // Avoid float artifacts such as 1.1000000238 rounding a cost of 110 up to 111.
         decimal priceMultiplier = (decimal)multiplier;
 
-        var allocated = new int[requirements.Count, offers.Count];
-        int[] available = offers.Select(offer => Math.Max(0, offer.Count)).ToArray();
-
-        // Prefer the most valuable requirement (e.g. the highest dogtag level). Augmenting paths
-        // can move earlier matches so a flexible requirement cannot steal a unique match.
-        foreach (int requirement in Enumerable.Range(0, requirements.Count)
-                                              .OrderByDescending(index => requirements[index].Count > 0
-                                                  ? Math.Floor(requirements[index].UnitValue * requirements[index].Count) / requirements[index].Count
-                                                  : 0)) {
-            int remaining = Math.Max(0, requirements[requirement].Count);
-            while (remaining > 0) {
-                int added = Allocate(requirement, remaining);
-                if (added == 0) {
-                    break;
-                }
-                remaining -= added;
-            }
-        }
+        var (allocated, available) = AllocateExactItems(requirements, offers, matches);
 
         decimal baseValue = 0;
         decimal requiredValue = 0;
@@ -82,6 +65,30 @@ internal static class BarterPricing {
 
         return new Result(ToInt(Math.Ceiling(requiredValue)), ToInt(Math.Floor(substituteValue)),
                           baseValue > 0 && requiredValue <= int.MaxValue);
+    }
+
+    private static (int[,] Allocated, int[] Available) AllocateExactItems(
+        IReadOnlyList<Requirement> requirements, IReadOnlyList<Offer> offers, bool[,] matches) {
+        var allocated = new int[requirements.Count, offers.Count];
+        int[] available = offers.Select(offer => Math.Max(0, offer.Count)).ToArray();
+
+        // Prefer the most valuable requirement (e.g. the highest dogtag level). Augmenting paths
+        // can move earlier matches so a flexible requirement cannot steal a unique match.
+        foreach (int requirement in Enumerable.Range(0, requirements.Count)
+                                              .OrderByDescending(index => requirements[index].Count > 0
+                                                  ? Math.Floor(requirements[index].UnitValue * requirements[index].Count) / requirements[index].Count
+                                                  : 0)) {
+            int remaining = Math.Max(0, requirements[requirement].Count);
+            while (remaining > 0) {
+                int added = Allocate(requirement, remaining);
+                if (added == 0) {
+                    break;
+                }
+                remaining -= added;
+            }
+        }
+
+        return (allocated, available);
 
         int Allocate(int requirement, int count) {
             int[] fromRequirement = Enumerable.Repeat(-1, offers.Count).ToArray();

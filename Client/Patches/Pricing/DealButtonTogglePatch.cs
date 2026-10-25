@@ -26,7 +26,7 @@ public class DealButtonTogglePatch : ModulePatch {
                              selectedItem.BuyRestrictionMax           == 0) && !selectedItem.IsEmptyStack;
 
             // computed fresh: this runs before the price display updates in OnPriceChanged
-            ____dealButton.Interactable = Current.GetBarterValue().CanTrade && canTrade;
+            ____dealButton.Interactable = canTrade && Current.GetBarterValue().CanTrade;
         }
     }
 }
