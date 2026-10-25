@@ -30,16 +30,15 @@ public class BasketPricePatch : ModulePatch {
 
             if (BarterValueLabelText != null) {
                 string currencyChar = CurrencyUtil.GetCurrencyChar(currency);
-                string? culture = LocalizationManager.Instance?.Culture;
-                BarterValueLabelText.text = BarterValueText.Format(BarterValueStatus.Required,
-                    currencyChar, TraderDealScreen.FormatPrice(requiredValue - amount), culture);
+                var strings = BarterValueText.GetLocaleStrings(LocalizationManager.Instance?.Culture);
+                BarterValueLabelText.text =
+                    $"{strings.Required}: {currencyChar} {TraderDealScreen.FormatPrice(requiredValue - amount)}";
                 if (amount > requiredValue) {
-                    BarterValueLabelText.text = BarterValueText.Format(BarterValueStatus.Overpaying,
-                        currencyChar, TraderDealScreen.FormatPrice(amount - requiredValue), culture);
+                    BarterValueLabelText.text =
+                        $" {strings.Overpaying}: +{currencyChar} {TraderDealScreen.FormatPrice(amount - requiredValue)}";
                 }
                 else if (amount == requiredValue) {
-                    BarterValueLabelText.text = BarterValueText.Format(BarterValueStatus.EvenTrade,
-                        currencyChar, TraderDealScreen.FormatPrice(0), culture);
+                    BarterValueLabelText.text = $" {strings.EvenTrade}: {currencyChar} {TraderDealScreen.FormatPrice(0)}";
                 }
             }
 
