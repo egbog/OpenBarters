@@ -69,9 +69,11 @@ There's also a `Source-Debug` configuration that references a decompiled `Assemb
 
 ## Contributing
 
-AI generated code will not be merged. The first reason being that I will not allow the codebase to become convoluted with complicated code no one understands. Secondly, this repo must stay aligned with the SPT Forge's stance on AI mods. 
+AI generated code will not be merged. First, I will not allow the codebase to become convoluted with complicated code no one understands. Second, this repo must stay aligned with the SPT Forge's stance on AI mods. 
 
-Using AI tools to assist in research, implementation and debugging is expected and acceptable. However, it is also expected that you explicitly disclose the usage of AI in any code included in a PR
+Using AI tools to assist in research, implementation and debugging is expected and acceptable. However, it is also expected that you explicitly disclose the usage of AI in any code included in a PR.
+
+Please reference existing code formatting and naming conventions when adding new code. Generally, Microsoft C# conventions, but with same-line (K&R) braces. A Resharper exported .editorconfig is included under the Client/ directory
 
 ## Credits
 Includes `MultiSelectInterop.cs` from [UI Fixes](https://github.com/tyfon7/UIFixes) by Tyfon (MIT).
