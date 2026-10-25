@@ -60,7 +60,6 @@ Compatible with [UI Fixes](https://github.com/tyfon7/UIFixes):
 - "Autoswitch Buy/Sell when Trading" won't switch to the sell tab on barter Ctrl+clicks
 
 ## Building
-
 1. Install the [.NET SDK](https://dotnet.microsoft.com/download) (8 or newer).
 2. Create a `Client/dependencies` folder and copy these into it:
    - From `<SPT install>/EscapeFromTarkov_Data/Managed`: `Assembly-CSharp.dll`, `Comfort.dll`, `ItemComponent.Types.dll`, `Sirenix.Serialization.dll`, `Unity.TextMeshPro.dll`, `UnityEngine.dll`, `UnityEngine.CoreModule.dll`, `UnityEngine.UI.dll`, `UnityEngine.UIModule.dll`, `UnityEngine.InputLegacyModule.dll`
@@ -85,6 +84,13 @@ There's also a `Source-Debug` configuration that references a decompiled `Assemb
 ### Pricing checks
 
 With the .NET 8 SDK or newer, run `dotnet run --project Tests -c Release`. These checks do not require game DLLs. They cover partial and full substitution, exact-item credit, surplus and partial stacks, purchase quantities, currency rounding, and overlapping requirements.
+
+## Contributing
+AI generated code will not be merged. Code you submit must be written and understood by you, for two reasons. First, I will not allow the codebase to become convoluted with complicated code no one understands. Second, this repo must stay aligned with the SPT Forge's stance on AI mods.
+
+Using AI tools to assist in research, planning and debugging is expected and acceptable. However, it is also expected that you explicitly disclose the usage of AI in your PR.
+
+Please reference existing code formatting and naming conventions when adding new code. Generally, Microsoft C# conventions, but with same-line (K&R) braces. A ReSharper-exported `.editorconfig` is included under the `Client/` directory.
 
 ## Credits
 Includes `MultiSelectInterop.cs` from [UI Fixes](https://github.com/tyfon7/UIFixes) by Tyfon (MIT).
