@@ -1,6 +1,8 @@
 ﻿using System.Reflection;
 using EFT.InventoryLogic;
 using EFT.UI;
+using EFT;
+using OpenBarters.Localization;
 using SPT.Reflection.Patching;
 using UnityEngine;
 using static OpenBarters.Controllers.OpenBarterController;
@@ -27,14 +29,16 @@ public class BasketPricePatch : ModulePatch {
             int requiredValue = Current.GetRequiredValue();
 
             if (BarterValueLabelText != null) {
+                string currencyChar = CurrencyUtil.GetCurrencyChar(currency);
+                var strings = BarterValueText.GetLocaleStrings(LocalizationManager.Instance?.Culture);
                 BarterValueLabelText.text =
-                    $"Required: {CurrencyUtil.GetCurrencyChar(currency)} {TraderDealScreen.FormatPrice(requiredValue - amount)}";
+                    $"{strings.Required}: {currencyChar} {TraderDealScreen.FormatPrice(requiredValue - amount)}";
                 if (amount > requiredValue) {
                     BarterValueLabelText.text =
-                        $" Overpaying: +{CurrencyUtil.GetCurrencyChar(currency)} {TraderDealScreen.FormatPrice(amount - requiredValue)}";
+                        $" {strings.Overpaying}: +{currencyChar} {TraderDealScreen.FormatPrice(amount - requiredValue)}";
                 }
                 else if (amount == requiredValue) {
-                    BarterValueLabelText.text = $" Even trade: {CurrencyUtil.GetCurrencyChar(currency)} {TraderDealScreen.FormatPrice(0)}";
+                    BarterValueLabelText.text = $" {strings.EvenTrade}: {currencyChar} {TraderDealScreen.FormatPrice(0)}";
                 }
             }
 
