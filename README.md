@@ -35,7 +35,9 @@ To uninstall, delete the `BepInEx/plugins/OpenBarters` folder.
 
 ## Known Issues
 Barters that require both money and items will only charge the items. There are none in vanilla, so this only affects modded traders.
-New UI text is English only.
+
+## Localization
+Russian is currently the only translated locale, with English being the fallback. Translations can easily be added by contributors by adding an entry in `Client/Localization/BarterValueText.cs`
 
 ## Compatibility
 Compatible with SPT 4.1.x
