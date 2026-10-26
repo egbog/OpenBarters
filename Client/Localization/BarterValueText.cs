@@ -3,16 +3,10 @@ using System.Collections.Generic;
 
 namespace OpenBarters.Localization;
 
-public sealed class LocaleStrings {
-    public string Required { get; }
-    public string Overpaying { get; }
-    public string EvenTrade { get; }
-
-    public LocaleStrings(string required, string overpaying, string evenTrade) {
-        Required = required;
-        Overpaying = overpaying;
-        EvenTrade = evenTrade;
-    }
+public sealed class LocaleStrings(string required, string overpaying, string evenTrade) {
+    public string Required   { get; } = required;
+    public string Overpaying { get; } = overpaying;
+    public string EvenTrade  { get; } = evenTrade;
 }
 
 public static class BarterValueText {
