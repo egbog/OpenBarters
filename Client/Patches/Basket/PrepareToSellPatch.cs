@@ -4,6 +4,7 @@ using SPT.Reflection.Patching;
 using System.Reflection;
 using EFT;
 using EFT.UI;
+using OpenBarters.Localization;
 using UIFixesInterop;
 using UnityEngine;
 using static OpenBarters.Controllers.OpenBarterController;
@@ -22,8 +23,10 @@ public class PrepareToSellPatch : ModulePatch {
         if (ToggleActive()) {
             // open split dialog if being used
             if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && item.StackObjectsCount > 1 && MultiSelect.Count <= 1) {
+                string splitText = BarterValueText.GetLocaleStrings(LocalizationManager.Instance?.Culture).Split;
+
                 SplitDialog splitDialog = ItemUiContext.Instance.SplitDialog;
-                splitDialog.Show("Split".Localized(null).ToUpper(),
+                splitDialog.Show(splitText.ToUpper(),
                                  item.StackObjectsCount,
                                  Input.mousePosition,
                                  count => {

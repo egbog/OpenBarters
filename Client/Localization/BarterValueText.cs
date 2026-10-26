@@ -1,15 +1,16 @@
 namespace OpenBarters.Localization;
 
-public sealed class LocaleStrings(string required, string overpaying, string evenTrade) {
+public sealed class LocaleStrings(string required, string overpaying, string evenTrade, string split) {
     public string Required   { get; } = required;
     public string Overpaying { get; } = overpaying;
     public string EvenTrade  { get; } = evenTrade;
+    public string Split      { get; } = split;
 }
 
 public static class BarterValueText {
     private static readonly Dictionary<string, LocaleStrings> Locales = new(StringComparer.OrdinalIgnoreCase) {
-        ["en"] = new("Required", "Overpaying", "Even trade"),
-        ["ru"] = new("Требуется", "Переплата", "Равный обмен")
+        ["en"] = new("Required", "Overpaying", "Even trade", "Split"),
+        ["ru"] = new("Требуется", "Переплата", "Равный обмен", "Разделить")
     };
 
     public static LocaleStrings GetLocaleStrings(string? culture) {
