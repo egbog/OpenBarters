@@ -35,10 +35,10 @@ public class BasketPricePatch : ModulePatch {
                     $"{strings.Required}: {currencyChar} {TraderDealScreen.FormatPrice(requiredValue - amount)}";
                 if (amount > requiredValue) {
                     BarterValueLabelText.text =
-                        $" {strings.Overpaying}: +{currencyChar} {TraderDealScreen.FormatPrice(amount - requiredValue)}";
+                        $"{strings.Overpaying}: +{currencyChar} {TraderDealScreen.FormatPrice(amount - requiredValue)}";
                 }
                 else if (amount == requiredValue) {
-                    BarterValueLabelText.text = $" {strings.EvenTrade}: {currencyChar} {TraderDealScreen.FormatPrice(0)}";
+                    BarterValueLabelText.text = $"{strings.EvenTrade}: {currencyChar} {TraderDealScreen.FormatPrice(0)}";
                 }
             }
 
