@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace OpenBarters.Localization;
 
 public sealed class LocaleStrings(string required, string overpaying, string evenTrade) {
