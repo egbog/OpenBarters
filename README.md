@@ -24,8 +24,9 @@ Anything the trader would buy from you on the sell tab, plus the items the barte
 Same rules as selling apply, so containers need to be empty and worn out items are refused. Weapons are accepted with their attachments.
 
 ## How value works
-- The barter's value is the handbook value of the items it originally asks for, in the trader's currency. Dogtags are multiplied by the required level.
+- The barter's value is the handbook value of the items it originally asks for, in the trader's currency. Dogtags are multiplied by the required level, with a minimum of 1 for valuation when no minimum level is required.
 - Your items are valued at what the trader would pay you for them, the same price you see on the sell tab (condition and loyalty level included).
+- Barters with no priceable requirements keep a red ribbon and glow, matching the disabled DEAL button.
 
 Since traders never pay full value, bartering with substitutes always costs a bit more than bringing the exact items. Lore-wise, think of it as the trader marking up the deal for not getting what they actually wanted.
 
