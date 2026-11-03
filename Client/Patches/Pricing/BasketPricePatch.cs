@@ -42,19 +42,20 @@ public class BasketPricePatch : ModulePatch {
                 }
             }
 
-            // green when the basket meets the required value, red otherwise
+            // match the deal gate: unpriceable barters stay red even when the basket covers zero
+            bool canTrade = requiredValue > 0 && amount >= requiredValue;
             if (BackgroundRibbon != null) {
-                BackgroundRibbon.color = amount >= requiredValue ? new Color(0.55f, 1.0f, 0.21f, 0.63f) : new Color(0.8f, 0.0f, 0.0f, 0.6f);
+                BackgroundRibbon.color = canTrade ? new Color(0.55f, 1.0f, 0.21f, 0.63f) : new Color(0.8f, 0.0f, 0.0f, 0.6f);
             }
 
             if (BackgroundGlow != null) {
                 // glow colour is in the sprite, so swap sprites instead of tinting
                 if (GreenGlowSprite != null) {
-                    BackgroundGlow.sprite = amount >= requiredValue ? GreenGlowSprite : RedGlowSprite;
+                    BackgroundGlow.sprite = canTrade ? GreenGlowSprite : RedGlowSprite;
                 }
                 // if green glow is null, just disable the glow for green and reenable for red
                 else {
-                    BackgroundGlow.enabled = amount < requiredValue;
+                    BackgroundGlow.enabled = !canTrade;
                 }
             }
 

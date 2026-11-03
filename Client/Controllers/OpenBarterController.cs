@@ -157,7 +157,7 @@ public class OpenBarterController {
 
             // include level of req item in pricing, required for things like dogtags
             if (req.RequiredItem.TryGetItemComponent(out DogtagComponent _)) {
-                requiredValue += (int)(convertedPrice * req.Level);
+                requiredValue += (int)(convertedPrice * Math.Max(1, req.Level));
             }
             else {
                 requiredValue += (int)convertedPrice;
