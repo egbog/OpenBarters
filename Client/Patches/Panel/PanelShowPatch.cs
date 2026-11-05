@@ -1,19 +1,24 @@
-﻿using EFT;
+﻿using Comfort.Common;
+using EFT;
+using EFT.HandBook;
 using EFT.InventoryLogic;
 using EFT.Trading;
 using EFT.UI;
+using EFT.UI.Ragfair;
+using OpenBarters.Controllers;
 using OpenBarters.Localization;
 using SPT.Reflection.Patching;
 using System.Reflection;
-using OpenBarters.Controllers;
 using UnityEngine;
 using UnityEngine.UI;
-using static OpenBarters.Controllers.OpenBarterController;
 using Object = UnityEngine.Object;
+using static OpenBarters.Controllers.OpenBarterController;
 
 namespace OpenBarters.Patches.Panel;
 
 public class PanelShowPatch : ModulePatch {
+    private static bool _barterIconSet;
+
     protected override MethodBase GetTargetMethod() {
         return typeof(BarterSchemePanel).GetMethod("Show", BindingFlags.Instance | BindingFlags.Public);
     }
@@ -34,10 +39,12 @@ public class PanelShowPatch : ModulePatch {
         if (OpenBarterToggle == null) {
             OpenBarterToggle      = Object.Instantiate(____autoFillRequirements, __instance.transform.parent, false);
             OpenBarterToggle.name = "OpenBarterToggle";
+            _barterIconSet        = false;
             RectTransform rt                     = OpenBarterToggle.RectTransform();
             rt.anchorMin          = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f); // center of the parent
             rt.anchoredPosition   = new Vector2(-199, 248);
             OpenBarterToggle.isOn = false;
+
             HoverTooltipArea tooltip = OpenBarterToggle.GetComponentInChildren<HoverTooltipArea>(true);
             tooltip?.SetMessageText(BarterValueText.GetLocaleStrings(LocalizationManager.Instance?.Culture).Enable, true);
 
@@ -61,6 +68,26 @@ public class PanelShowPatch : ModulePatch {
                     OpenBarterController.TraderAssortment?.PreparedSumChanged.Invoke(); // redraw price + ribbon
                 }
             });
+        }
+
+        if (!_barterIconSet && RagFair.IconsLoader != null &&
+            Singleton<Handbook>.Instance.AllNodes.TryGetValue("5b47574386f77428ca22b33e", out HandbookNode node) &&
+            !string.IsNullOrEmpty(node.Data.Icon)) {
+            string icon = node.Data.Icon;
+
+            RagFair.IconsLoader.GetIcon(icon,
+                                        sprite => {
+                                            // runs when the icon is loaded, or immediately if cached
+                                            if (sprite != null && OpenBarterToggle != null) {
+                                                foreach (Image img in OpenBarterToggle.GetComponentsInChildren<Image>(true)) {
+                                                    if (img.name == "Icon") {
+                                                        img.sprite = sprite;
+                                                    }
+                                                }
+
+                                                _barterIconSet = true;
+                                            }
+                                        });
         }
 
         return true;
