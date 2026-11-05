@@ -10,7 +10,8 @@ public sealed class LocaleStrings(string required, string overpaying, string eve
 public static class BarterValueText {
     private static readonly Dictionary<string, LocaleStrings> Locales = new(StringComparer.OrdinalIgnoreCase) {
         ["en"] = new LocaleStrings("Required",  "Overpaying", "Even trade",   "Split"),
-        ["ru"] = new LocaleStrings("Требуется", "Переплата",  "Равный обмен", "Разделить")
+        ["ru"] = new LocaleStrings("Требуется", "Переплата",  "Равный обмен", "Разделить"),
+        ["zh-cn"] = new LocaleStrings("应付", "多付", "等价交换", "分割")
     };
 
     public static LocaleStrings GetLocaleStrings(string? culture) {
