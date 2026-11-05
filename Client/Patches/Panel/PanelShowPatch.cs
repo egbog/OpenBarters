@@ -39,7 +39,7 @@ public class PanelShowPatch : ModulePatch {
             rt.anchoredPosition   = new Vector2(-199, 248);
             OpenBarterToggle.isOn = false;
             HoverTooltipArea tooltip = OpenBarterToggle.GetComponentInChildren<HoverTooltipArea>(true);
-            tooltip.SetMessageText(BarterValueText.GetLocaleStrings(LocalizationManager.Instance?.Culture).Enable, true);
+            tooltip?.SetMessageText(BarterValueText.GetLocaleStrings(LocalizationManager.Instance?.Culture).Enable, true);
 
             // remove auto fill listeners
             OpenBarterToggle.onValueChanged.RemoveAllListeners();
