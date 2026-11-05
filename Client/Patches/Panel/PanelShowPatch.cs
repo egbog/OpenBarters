@@ -1,12 +1,15 @@
-﻿using EFT.InventoryLogic;
+﻿using EFT;
+using EFT.InventoryLogic;
 using EFT.Trading;
 using EFT.UI;
+using OpenBarters.Localization;
 using SPT.Reflection.Patching;
 using System.Reflection;
+using OpenBarters.Controllers;
 using UnityEngine;
 using UnityEngine.UI;
-using Object = UnityEngine.Object;
 using static OpenBarters.Controllers.OpenBarterController;
+using Object = UnityEngine.Object;
 
 namespace OpenBarters.Patches.Panel;
 
@@ -25,7 +28,7 @@ public class PanelShowPatch : ModulePatch {
         UseTrader(trader);
 
         // the toggle listener is creating once, so it reads this static instead of capturing the first trader's assortment
-        TraderAssortment = traderAssortment;
+        OpenBarterController.TraderAssortment = traderAssortment;
 
         // build the toggle button once, clones auto-fill checkbox
         if (OpenBarterToggle == null) {
@@ -35,6 +38,8 @@ public class PanelShowPatch : ModulePatch {
             rt.anchorMin          = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f); // center of the parent
             rt.anchoredPosition   = new Vector2(-199, 248);
             OpenBarterToggle.isOn = false;
+            HoverTooltipArea tooltip = OpenBarterToggle.GetComponentInChildren<HoverTooltipArea>(true);
+            tooltip.SetMessageText(BarterValueText.GetLocaleStrings(LocalizationManager.Instance?.Culture).Enable, true);
 
             // remove auto fill listeners
             OpenBarterToggle.onValueChanged.RemoveAllListeners();
@@ -51,8 +56,9 @@ public class PanelShowPatch : ModulePatch {
                     Current!.ClearBarterItems();
                 }
                 else {
-                    TraderAssortment?.PreparedItemsChanged.Invoke(); // re-check greying for this barter's required items
-                    TraderAssortment?.PreparedSumChanged.Invoke();   // redraw price + ribbon
+                    OpenBarterController.TraderAssortment?.PreparedItemsChanged
+                                        .Invoke();                                      // re-check greying for this barter's required items
+                    OpenBarterController.TraderAssortment?.PreparedSumChanged.Invoke(); // redraw price + ribbon
                 }
             });
         }
