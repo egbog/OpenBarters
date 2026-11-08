@@ -126,39 +126,34 @@ public class OpenBarterController {
         return false;
     }
 
-    // value the basket must reach. the selected barter's non-money requirements at handbook value, converted to trader currency
-    public int GetRequiredValue() {
-        var requiredValue = 0;
-
-        if (TraderAssortment == null) {
-            return requiredValue;
+    // handbook value of one required unit in trader currency, dogtags × level
+    public double GetUnitValue(Requisite req) {
+        // skip money reqs
+        if (CurrencyUtil.TryGetCurrencyType(req.RequiredItem.TemplateId, out _)) {
+            return 0;
         }
 
         double currencyRate = CurrentTrader.CurrencyCourses[CurrencyUtil.GetCurrencyId(CurrentTrader.Settings.Currency)];
 
-        foreach (Requisite req in TraderAssortment.CurrentRequisites) {
-            // skip money reqs
-            if (CurrencyUtil.TryGetCurrencyType(req.RequiredItem.TemplateId, out _)) {
-                continue;
-            }
+        double basePrice      = Singleton<Handbook>.Instance.GetBasePrice(req.RequiredItem.TemplateId);
+        // convert into trader currency
+        double convertedPrice = basePrice / currencyRate;
 
-            double basePrice      = Singleton<Handbook>.Instance.GetBasePrice(req.RequiredItem.TemplateId);
-            // convert into trader currency
-            double convertedPrice = basePrice / currencyRate;
-
-            // account for the exact barter requisites already prepared
-            convertedPrice *= Math.Max(0, req.RequiredItemsCount - req.PreparedItemsCount);
-
-            // include level of req item in pricing, required for things like dogtags
-            if (req.RequiredItem.TryGetItemComponent(out DogtagComponent _)) {
-                requiredValue += (int)(convertedPrice * Math.Max(1, req.Level));
-            }
-            else {
-                requiredValue += (int)convertedPrice;
-            }
+        if (req.RequiredItem.TryGetItemComponent(out DogtagComponent _)) {
+            convertedPrice *= Math.Max(1, req.Level);
         }
 
-        return requiredValue;
+        return convertedPrice;
+    }
+
+    // value the basket must reach. the selected barter's non-money requirements at handbook value, converted to trader currency
+    public int GetRequiredValue() {
+        if (TraderAssortment == null) {
+            return 0;
+        }
+
+        return TraderAssortment.CurrentRequisites.Sum(req => (int)(GetUnitValue(req) *
+                                                                   Math.Max(0, req.RequiredItemsCount - req.PreparedItemsCount)));
     }
 
     // value of the basket at this trader's buy price
@@ -168,37 +163,12 @@ public class OpenBarterController {
 
     // value of the prepared requisites
     public int GetPreparedValue() {
-        var preparedValue = 0;
-
         if (TraderAssortment == null) {
-            return preparedValue;
+            return 0;
         }
 
-        double currencyRate = CurrentTrader.CurrencyCourses[CurrencyUtil.GetCurrencyId(CurrentTrader.Settings.Currency)];
-
-        foreach (Requisite req in TraderAssortment.CurrentRequisites) {
-            // skip money reqs
-            if (CurrencyUtil.TryGetCurrencyType(req.RequiredItem.TemplateId, out _)) {
-                continue;
-            }
-
-            double basePrice      = Singleton<Handbook>.Instance.GetBasePrice(req.RequiredItem.TemplateId);
-            // convert into trader currency
-            double convertedPrice = basePrice / currencyRate;
-
-            // account for the exact barter requisites already prepared
-            convertedPrice *= Math.Min(req.PreparedItemsCount, req.RequiredItemsCount);
-
-            // include level of req item in pricing, required for things like dogtags
-            if (req.RequiredItem.TryGetItemComponent(out DogtagComponent _)) {
-                preparedValue += (int)(convertedPrice * Math.Max(1, req.Level));
-            }
-            else {
-                preparedValue += (int)convertedPrice;
-            }
-        }
-
-        return preparedValue;
+        return TraderAssortment.CurrentRequisites.Sum(req => (int)(GetUnitValue(req) *
+                                                                   Math.Min(req.PreparedItemsCount, req.RequiredItemsCount)));
     }
 
     // buy the selected item with the basket's original items. modelled on Assortment.Purchase
@@ -216,7 +186,7 @@ public class OpenBarterController {
         int basketValue   = GetBasketValue().Amount;
         int requiredValue = GetRequiredValue();
 
-        // re check the deal gate. required value 0 means nothing could be priced
+        // re check the deal gate
         if (!CanTrade(basketValue, requiredValue)) {
             Plugin.Log.LogError("Insufficient basket value to complete the barter transaction");
             return;
@@ -291,6 +261,4 @@ public class OpenBarterController {
         bool allReqsMet = TraderAssortment?.CurrentRequisites.TrueForAll(req => req.Enough) == true;
         return (requiredValue > 0 || allReqsMet) && basketValue >= requiredValue;
     }
-    
-    
 }

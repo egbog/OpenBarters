@@ -55,6 +55,11 @@ public class PanelShowPatch : ModulePatch {
             OpenBarterToggle.onValueChanged.AddListener(useGrid => {
                 ApplyToggle(useGrid, ____requisitesContainer);
 
+                // re-run each slot's UpdateValues so the value labels follow the toggle
+                foreach (Requisite req in OpenBarterController.TraderAssortment?.CurrentRequisites ?? []) {
+                    req.PreparedChanged.Invoke();
+                }
+
                 // hide/restore the "missing items" ribbon
                 __instance.UpdateValidDealWarning();
 

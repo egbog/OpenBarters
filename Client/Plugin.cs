@@ -41,6 +41,7 @@ public class Plugin : BaseUnityPlugin {
         new SkipAddListenerOnClonePatch().Enable();
         new PrepareToSellPatch().Enable();
         new RequisitePrepareItemPatch().Enable();
+        new RequisitePriceLabelPatch().Enable();
 
         if (Chainloader.PluginInfos.ContainsKey("com.tyfon.uifixes")) {
             new UIFixesAutoSwitchPatch().Enable();
