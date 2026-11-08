@@ -40,6 +40,7 @@ public class Plugin : BaseUnityPlugin {
         new ControlClickPatch().Enable();
         new SkipAddListenerOnClonePatch().Enable();
         new PrepareToSellPatch().Enable();
+        new RequisitePrepareItemPatch().Enable();
 
         if (Chainloader.PluginInfos.ContainsKey("com.tyfon.uifixes")) {
             new UIFixesAutoSwitchPatch().Enable();

@@ -2,6 +2,7 @@
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT;
+using OpenBarters.Controllers;
 using OpenBarters.Localization;
 using SPT.Reflection.Patching;
 using UnityEngine;
@@ -24,7 +25,9 @@ public class BasketPricePatch : ModulePatch {
         if (ToggleActive()) {
             // values are in the trader's currency
             currency = Current!.CurrentTrader.Settings.Currency;
-            amount   = Current.GetBasketValue().Amount;
+            int basketValue = Current.GetBasketValue().Amount;
+            // deal button shows everything paid: basket at trader price + exact requirements at handbook
+            amount = basketValue + Current.GetPreparedValue();
 
             int requiredValue = Current.GetRequiredValue();
 
@@ -32,18 +35,18 @@ public class BasketPricePatch : ModulePatch {
                 string currencyChar = CurrencyUtil.GetCurrencyChar(currency);
                 var strings = BarterValueText.GetLocaleStrings(LocalizationManager.Instance?.Culture);
                 BarterValueLabelText.text =
-                    $"{strings.Required}: {currencyChar} {TraderDealScreen.FormatPrice(requiredValue - amount)}";
-                if (amount > requiredValue) {
+                    $"{strings.Required}: {currencyChar} {TraderDealScreen.FormatPrice(requiredValue - basketValue)}";
+                if (basketValue > requiredValue) {
                     BarterValueLabelText.text =
-                        $"{strings.Overpaying}: +{currencyChar} {TraderDealScreen.FormatPrice(amount - requiredValue)}";
+                        $"{strings.Overpaying}: +{currencyChar} {TraderDealScreen.FormatPrice(basketValue - requiredValue)}";
                 }
-                else if (amount == requiredValue) {
+                else if (basketValue == requiredValue) {
                     BarterValueLabelText.text = $"{strings.EvenTrade}: {currencyChar} {TraderDealScreen.FormatPrice(0)}";
                 }
             }
 
-            // match the deal gate: unpriceable barters stay red even when the basket covers zero
-            bool canTrade = requiredValue > 0 && amount >= requiredValue;
+            // same rule as the deal gate
+            bool canTrade = CanTrade(basketValue, requiredValue);
             if (BackgroundRibbon != null) {
                 BackgroundRibbon.color = canTrade ? new Color(0.55f, 1.0f, 0.21f, 0.63f) : new Color(0.8f, 0.0f, 0.0f, 0.6f);
             }

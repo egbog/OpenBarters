@@ -29,7 +29,7 @@ public class OpenBarterController {
     public static Image?                BackgroundGlow;
     public static Sprite?               GreenGlowSprite; // status_green_glow, used to indicate sufficient basket value
     public static Sprite?               RedGlowSprite;   // warning_glow
-    public static Tab?     SellTab;
+    public static Tab?                  SellTab;
 
     public ItemController TraderController; // owns the basket's fake stash, not the trader's own controller
 
@@ -95,8 +95,8 @@ public class OpenBarterController {
 
     // copy goes in the basket. original stays in stash until purchase is sent. modelled on PrepareToSell
     public void PrepareBarterItem(Item item, LocationInGrid location, int count) {
-		// already in the basket, e.g. our drop and UIFixes' multi-select both placing the dragged item
-		if (BarterItems.ContainsValue(item)) {
+        // already in the basket, e.g. our drop and UIFixes' multi-select both placing the dragged item
+        if (BarterItems.ContainsValue(item)) {
             return;
         }
 
@@ -146,7 +146,8 @@ public class OpenBarterController {
             // convert into trader currency
             double convertedPrice = basePrice / currencyRate;
 
-            convertedPrice *= req.RequiredItemsCount;
+            // account for the exact barter requisites already prepared
+            convertedPrice *= Math.Max(0, req.RequiredItemsCount - req.PreparedItemsCount);
 
             // include level of req item in pricing, required for things like dogtags
             if (req.RequiredItem.TryGetItemComponent(out DogtagComponent _)) {
@@ -165,6 +166,41 @@ public class OpenBarterController {
         return CurrentTrader.GetAssortmentPrice((Stash)TraderController.RootItem).GetValueOrDefault();
     }
 
+    // value of the prepared requisites
+    public int GetPreparedValue() {
+        var preparedValue = 0;
+
+        if (TraderAssortment == null) {
+            return preparedValue;
+        }
+
+        double currencyRate = CurrentTrader.CurrencyCourses[CurrencyUtil.GetCurrencyId(CurrentTrader.Settings.Currency)];
+
+        foreach (Requisite req in TraderAssortment.CurrentRequisites) {
+            // skip money reqs
+            if (CurrencyUtil.TryGetCurrencyType(req.RequiredItem.TemplateId, out _)) {
+                continue;
+            }
+
+            double basePrice      = Singleton<Handbook>.Instance.GetBasePrice(req.RequiredItem.TemplateId);
+            // convert into trader currency
+            double convertedPrice = basePrice / currencyRate;
+
+            // account for the exact barter requisites already prepared
+            convertedPrice *= Math.Min(req.PreparedItemsCount, req.RequiredItemsCount);
+
+            // include level of req item in pricing, required for things like dogtags
+            if (req.RequiredItem.TryGetItemComponent(out DogtagComponent _)) {
+                preparedValue += (int)(convertedPrice * Math.Max(1, req.Level));
+            }
+            else {
+                preparedValue += (int)convertedPrice;
+            }
+        }
+
+        return preparedValue;
+    }
+
     // buy the selected item with the basket's original items. modelled on Assortment.Purchase
     public async Task PurchaseBarter() {
         Assortment? assortment = TraderAssortment; // local copy, static can change if trader switches mid request
@@ -181,7 +217,7 @@ public class OpenBarterController {
         int requiredValue = GetRequiredValue();
 
         // re check the deal gate. required value 0 means nothing could be priced
-        if (basketValue < requiredValue || requiredValue <= 0) {
+        if (!CanTrade(basketValue, requiredValue)) {
             Plugin.Log.LogError("Insufficient basket value to complete the barter transaction");
             return;
         }
@@ -201,7 +237,8 @@ public class OpenBarterController {
         try {
             // pay with the originals
             TradingItemReference[] references = [
-                .. BarterItems.Select(pair => new TradingItemReference { Count = pair.Key.StackObjectsCount, Item = pair.Value })
+                .. BarterItems.Select(pair => new TradingItemReference { Count = pair.Key.StackObjectsCount, Item = pair.Value }),
+                .. assortment.CurrentRequisites.SelectMany(req => req.PreparedItems)
             ];
 
             // buying last of the stack, deselect. clears basket so it must happen after references are created
@@ -248,4 +285,12 @@ public class OpenBarterController {
     public static bool ToggleActive() {
         return OpenBarterToggle && OpenBarterToggle is { isOn: true, gameObject.activeInHierarchy: true };
     }
+
+    // basket covers the required value; zero only counts when every requirement is filled with exact items
+    public static bool CanTrade(int basketValue, int requiredValue) {
+        bool allReqsMet = TraderAssortment?.CurrentRequisites.TrueForAll(req => req.Enough) == true;
+        return (requiredValue > 0 || allReqsMet) && basketValue >= requiredValue;
+    }
+    
+    
 }
