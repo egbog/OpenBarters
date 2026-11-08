@@ -29,9 +29,14 @@ public class CanBuyRequisitePatch : ModulePatch {
             return;
         }
 
-        // current trader only, never currency and only templates the selected barter asks for
+        // current trader only, never currency; templates the selected barter asks for, any dogtag for dogtag requirements
         if (__instance.Id == Current.CurrentTrader.Id && !CurrencyUtil.TryGetCurrencyType(itemTemplate._id, out _) &&
-            OpenBarterController.TraderAssortment?.CurrentRequisites.Exists(req => req.RequiredItem.TemplateId == itemTemplate._id) == true) {
+            OpenBarterController.TraderAssortment?.CurrentRequisites.Exists(req => req.IsDogtagRequired
+                                                                                ? itemTemplate is BarterOtherTemplate {
+                                                                                    DogTagQualities: true
+                                                                                }
+                                                                                : req.RequiredItem.TemplateId == itemTemplate._id) ==
+            true) {
             __result = true;
         }
     }
