@@ -58,13 +58,6 @@ public class OpenBarterController {
     }
 
     public static void ApplyToggle(bool useGrid, Transform requisitesContainer) {
-        requisitesContainer.parent.gameObject.SetActive(!useGrid); // ItemsPanel. requisites list
-
-        // this takes up space we need for our grid and info
-        if (ItemsNeededLabel != null) {
-            ItemsNeededLabel.gameObject.SetActive(!useGrid);
-        }
-
         if (BarterGridSlot != null) {
             BarterGridSlot.gameObject.SetActive(useGrid);
         }
