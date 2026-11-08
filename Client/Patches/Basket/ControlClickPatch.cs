@@ -2,6 +2,7 @@
 using EFT.Communications;
 using EFT.InventoryLogic;
 using EFT.Trading;
+using EFT.UI;
 using SPT.Reflection.Patching;
 using static OpenBarters.Controllers.OpenBarterController;
 
@@ -12,7 +13,7 @@ public class ControlClickPatch : ModulePatch {
         return typeof(Assortment).GetMethod("QuickFindTradingAppropriatePlace", BindingFlags.Instance | BindingFlags.Public);
     }
 
-    // ctrl+click a stash item: in barter mode put it in the basket instead of the hidden sell grid
+    // ctrl+click a stash item in barter mode: fill a matching requirement first, otherwise put it in the basket
     [PatchPrefix]
     private static bool Prefix(ref bool __result, Item item, Assortment __instance) {
         if (!ToggleActive()) {
@@ -20,8 +21,20 @@ public class ControlClickPatch : ModulePatch {
             return true;
         }
 
+        // check if the ctrl-clicked item is a requirement of the barter
+        Requisite? requisite = __instance.CurrentRequisites.FirstOrDefault(req => !req.Enough               && req.IsRequired(item) &&
+                                                                                  item.IsExchangeable(true) &&
+                                                                                  !__instance.IsBeingSold(item));
+
+        // insert the item into the requirement UI element instead of the barter grid
+        if (requisite != null && item.PinLockState != EItemPinLockState.Locked) {
+            requisite.PrepareItem(item);
+            __result = true;
+            return false;
+        }
+
         // not accepted or already in the grid
-        if (!__instance.CanPrepareItemToSell(item) || __instance.IsBeingSold(item)) {
+        if (!__instance.CanPrepareItemToSell(item)) {
             __result = false;
             return false;
         }
