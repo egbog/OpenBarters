@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using EFT.InventoryLogic;
 using EFT.Trading;
+using EFT.UI;
 using SPT.Reflection.Patching;
 using static OpenBarters.Controllers.OpenBarterController;
 
@@ -13,7 +14,7 @@ public class IsBeingSoldPatch : ModulePatch {
 
     // greys out stash originals that are in the basket (same check vanilla uses for its sell table)
     [PatchPostfix]
-    private static void Postfix(ref bool __result, Item item) {
+    private static void Postfix(Assortment __instance, ref bool __result, Item item) {
         // skip if barter table is not active
         if (!ToggleActive()) {
             return;
@@ -22,5 +23,7 @@ public class IsBeingSoldPatch : ModulePatch {
         // OR with vanilla's result so items on the real sell table still show as being sold
         // match: a basket item with the same Id that isn't this exact object (i.e. its clone)
         __result |= item.GetAllItems().Any(subItem => Current!.BarterTableGrid.Items.Any(x => subItem.Id == x.Id && subItem != x));
+        // also grey items already put on the barter's own requirements
+        __result |= __instance.CurrentRequisites.IsPreparedForTrade(item);
     }
 }
