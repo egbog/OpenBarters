@@ -27,8 +27,9 @@ public class RequisitePriceLabelPatch : ModulePatch {
 
         // create value label if it doesn't exist yet
         if (!existing) {
-            valueText      = Object.Instantiate(____count, __instance.Icon.transform);
-            valueText.name = "OpenBarterValue";
+            valueText       = Object.Instantiate(____count, __instance.Icon.transform);
+            valueText.name  = "OpenBarterValue";
+            valueText.color = new Color(0.55f, 1.0f, 0.21f, 0.63f);
             RectTransform rt = valueText.GetComponent<RectTransform>();
             rt.anchorMax        = new Vector2(1f,  1f);
             rt.anchorMin        = new Vector2(1f,  1f);
@@ -42,7 +43,7 @@ public class RequisitePriceLabelPatch : ModulePatch {
         if (valueText != null) {
             valueText.gameObject.SetActive(ToggleActive() && ____requisite.PreparedItemsCount > 0);
             double value = Current.GetUnitValue(____requisite);
-            valueText.text = $"{CurrencyUtil.GetCurrencyChar(Current.CurrentTrader.Settings.Currency)} {TraderDealScreen.FormatPrice(
+            valueText.text = $"+{CurrencyUtil.GetCurrencyChar(Current.CurrentTrader.Settings.Currency)} {TraderDealScreen.FormatPrice(
                  (int)(value * Math.Min(____requisite.PreparedItemsCount, ____requisite.RequiredItemsCount)))}";
 
             RectTransform rt = valueText.GetComponent<RectTransform>();
