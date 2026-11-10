@@ -32,8 +32,8 @@ public class BasketPricePatch : ModulePatch {
             int requiredValue = Current.GetRequiredValue();
 
             if (BarterValueLabelText != null) {
-                string currencyChar = CurrencyUtil.GetCurrencyChar(currency);
-                var strings = BarterValueText.GetLocaleStrings(LocalizationManager.Instance?.Culture);
+                string        currencyChar = CurrencyUtil.GetCurrencyChar(currency);
+                LocaleStrings strings      = BarterValueText.GetLocaleStrings(LocalizationManager.Instance?.Culture);
                 BarterValueLabelText.text =
                     $"{strings.Required}: {currencyChar} {TraderDealScreen.FormatPrice(requiredValue - basketValue)}";
                 if (basketValue > requiredValue) {

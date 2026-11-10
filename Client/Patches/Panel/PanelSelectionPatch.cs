@@ -36,9 +36,6 @@ public class PanelSelectionPatch : ModulePatch {
 
             MainViewport = ____mainPart.viewport;
 
-            // requirements text
-            ItemsNeededLabel = ____mainPart.content.Find("BarterPanel/Items Needed From Stash");
-
             // whole ribbon image + text as child
             // this is hidden via HideValidDealWarningPatch
             Transform? validWarning = ____mainPart.content.Find("BarterPanel/ValidWarning");

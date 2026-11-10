@@ -22,7 +22,6 @@ public class OpenBarterController {
     public static RectTransform?        BarterGridSlot;             // layout placeholder holding the clone inside the buy window
     public static LayoutElement?        SlotLayout;                 // reserves the slot's height in the window's layout
     public static RectTransform?        MainViewport;               // buy window's scroll viewport, used to center the grid
-    public static Transform?            ItemsNeededLabel;           // "required from your stash" label, hidden in barter grid
     public static Transform?            BarterValueRibbon;          // required value ribbon, clone of ValidWarning
     public static TextMeshProUGUI?      BarterValueLabelText;
     public static Image?                BackgroundRibbon;
