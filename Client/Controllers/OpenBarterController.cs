@@ -151,8 +151,11 @@ public class OpenBarterController {
             return 0;
         }
 
-        double handbookValue = Singleton<Handbook>.Instance.GetBasePrice(TraderAssortment.SelectedItem.TemplateId) *
-                               TraderAssortment.CurrentQuantity;
+        // handbook value of the reward incl. attachments/plates in trader currency, × quantity bought
+        double handbookValue =
+            PriceCalculator.CalculateBasePriceForAllItems(TraderAssortment.SelectedItem, 1, Singleton<Handbook>.Instance, false) *
+            TraderAssortment.CurrentQuantity;
+        
         double currencyRate = CurrentTrader.CurrencyCourses[CurrencyUtil.GetCurrencyId(CurrentTrader.Settings.Currency)];
         return handbookValue / currencyRate;
     }
