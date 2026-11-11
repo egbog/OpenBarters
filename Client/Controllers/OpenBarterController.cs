@@ -145,14 +145,43 @@ public class OpenBarterController {
         return convertedPrice;
     }
 
+    // handbook value of the reward in trader currency, × quantity bought
+    public double GetRewardValue() {
+        if (TraderAssortment?.SelectedItem == null) {
+            return 0;
+        }
+
+        double handbookValue = Singleton<Handbook>.Instance.GetBasePrice(TraderAssortment.SelectedItem.TemplateId) *
+                               TraderAssortment.CurrentQuantity;
+        double currencyRate = CurrentTrader.CurrencyCourses[CurrencyUtil.GetCurrencyId(CurrentTrader.Settings.Currency)];
+        return handbookValue / currencyRate;
+    }
+
     // value the basket must reach. the selected barter's non-money requirements at handbook value, converted to trader currency
+    // also applies minimum value through a floor scaled by the unmet share of the requirements, then the global markup
     public int GetRequiredValue() {
         if (TraderAssortment == null) {
             return 0;
         }
 
-        return TraderAssortment.CurrentRequisites.Sum(req => (int)(GetUnitValue(req) *
-                                                                   Math.Max(0, req.RequiredItemsCount - req.PreparedItemsCount)));
+        // handbook value of the offered item in trader currency
+        double rewardValue = GetRewardValue();
+        double floor       = rewardValue * Plugin.MinimumValueFactor.Value;
+
+        double totalValue = TraderAssortment.CurrentRequisites.Sum(req => GetUnitValue(req) * req.RequiredItemsCount);
+
+        double remainingValue = TraderAssortment.CurrentRequisites.Sum(req => GetUnitValue(req) *
+                                                                              Math.Max(0, req.RequiredItemsCount - req.PreparedItemsCount));
+
+        // check if barter value is below the minimum fraction of the offered item's handbook value
+        if (remainingValue > 0) {
+            double unmetShare  = remainingValue / totalValue;
+            double scaledFloor = floor          * unmetShare;
+            remainingValue = Math.Max(remainingValue, scaledFloor);
+        }
+
+        // apply global multiplier
+        return (int)(remainingValue * Plugin.SubstitutePriceMultiplier.Value);
     }
 
     // value of the basket at this trader's buy price
