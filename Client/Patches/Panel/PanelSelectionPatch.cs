@@ -4,6 +4,7 @@ using HarmonyLib;
 using SPT.Reflection.Patching;
 using System.Reflection;
 using EFT.InventoryLogic;
+using EFT.Trading;
 using OpenBarters.Controllers;
 using TMPro;
 using UnityEngine;
@@ -148,6 +149,11 @@ public class PanelSelectionPatch : ModulePatch {
             ApplyToggle(OpenBarterToggle.isOn, ____requisitesContainer);
             // second refresh once the toggle is visible. un-greys the new barter's required items
             TraderAssortment?.PreparedItemsChanged.Invoke();
+
+            // re-run each slot's UpdateValues so the value labels follow the toggle
+            foreach (Requisite req in TraderAssortment?.CurrentRequisites ?? []) {
+                req.PreparedChanged.Invoke();
+            }
         }
         else {
             // cash offer or no offer
