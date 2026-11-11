@@ -41,8 +41,8 @@ public class RequisitePriceLabelPatch : ModulePatch {
         }
 
         if (valueText != null) {
-            valueText.gameObject.SetActive(ToggleActive() && ____requisite.PreparedItemsCount > 0);
             double value = Current.GetUnitValue(____requisite);
+            valueText.gameObject.SetActive(ToggleActive() && ____requisite.PreparedItemsCount > 0 && value > 0);
             valueText.text = $"+{CurrencyUtil.GetCurrencyChar(Current.CurrentTrader.Settings.Currency)} {TraderDealScreen.FormatPrice(
                  (int)(value * Math.Min(____requisite.PreparedItemsCount, ____requisite.RequiredItemsCount)))}";
 
