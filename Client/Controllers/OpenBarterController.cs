@@ -289,4 +289,14 @@ public class OpenBarterController {
         bool allReqsMet = TraderAssortment?.CurrentRequisites.TrueForAll(req => req.Enough) == true;
         return (requiredValue > 0 || allReqsMet) && basketValue >= requiredValue;
     }
+
+    // open requirement slot this item can fill, null if none
+    public static Requisite? FindOpenRequisite(Assortment assortment, Item item) {
+        if (item.PinLockState == EItemPinLockState.Locked) {
+            return null;
+        }
+        // check if the item is a requirement of the barter
+        return assortment.CurrentRequisites.FirstOrDefault(req => !req.Enough && req.IsRequired(item) && item.IsExchangeable(true) &&
+                                                                  !assortment.IsBeingSold(item));
+    }
 }

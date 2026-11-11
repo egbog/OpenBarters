@@ -16,13 +16,22 @@ public class PrepareToSellPatch : ModulePatch {
         return typeof(Assortment).GetMethod("PrepareToSell", BindingFlags.Instance | BindingFlags.Public);
     }
 
-	// all placements into our grid land here (drops via TradingTableGridView.AcceptItem, UIFixes multi-select)
-	[PatchPrefix]
-    private static bool Prefix(Item item, LocationInGrid location) {
-        // barter mode: anything placed for sale (e.g. UIFixes multi-select) goes into the barter grid instead
+    // all placements into our grid land here (drops via TradingTableGridView.AcceptItem, UIFixes multi-select)
+    [PatchPrefix]
+    private static bool Prefix(Assortment __instance, Item item, LocationInGrid location) {
+        // barter mode: exact items fill their slot first, everything else goes into the barter grid
         if (ToggleActive()) {
+            Requisite? requisite = FindOpenRequisite(__instance, item);
+
+            // send exact req to the requirement slot instead of the barter grid
+            if (requisite != null) {
+                requisite.PrepareItem(item);
+                return false;
+            }
+
             // open split dialog if being used
-            if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && item.StackObjectsCount > 1 && MultiSelect.Count <= 1) {
+            if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && item.StackObjectsCount > 1 &&
+                MultiSelect.Count                                                                                   <= 1) {
                 string splitText = BarterValueText.GetLocaleStrings(LocalizationManager.Instance?.Culture).Split;
 
                 SplitDialog splitDialog = ItemUiContext.Instance.SplitDialog;

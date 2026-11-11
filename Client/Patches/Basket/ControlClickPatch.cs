@@ -21,13 +21,10 @@ public class ControlClickPatch : ModulePatch {
             return true;
         }
 
-        // check if the ctrl-clicked item is a requirement of the barter
-        Requisite? requisite = __instance.CurrentRequisites.FirstOrDefault(req => !req.Enough               && req.IsRequired(item) &&
-                                                                                  item.IsExchangeable(true) &&
-                                                                                  !__instance.IsBeingSold(item));
+        Requisite? requisite = FindOpenRequisite(__instance, item);
 
         // insert the item into the requirement UI element instead of the barter grid
-        if (requisite != null && item.PinLockState != EItemPinLockState.Locked) {
+        if (requisite != null) {
             requisite.PrepareItem(item);
             __result = true;
             return false;
