@@ -29,7 +29,7 @@ public class RequisitePriceLabelPatch : ModulePatch {
         if (!existing) {
             valueText       = Object.Instantiate(____count, __instance.Icon.transform);
             valueText.name  = "OpenBarterValue";
-            valueText.color = new Color(0.55f, 1.0f, 0.21f, 0.73f);
+            valueText.color = new Color(0.55f, 1.0f, 0.21f, 0.85f);
             RectTransform rt = valueText.GetComponent<RectTransform>();
             rt.anchorMax        = new Vector2(1f,  1f);
             rt.anchorMin        = new Vector2(1f,  1f);
