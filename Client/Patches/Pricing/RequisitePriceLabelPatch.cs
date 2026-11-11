@@ -22,12 +22,12 @@ public class RequisitePriceLabelPatch : ModulePatch {
             return;
         }
 
-        Transform?      existing = __instance.Icon.transform.Find("OpenBarterValue");
+        Transform?      existing = __instance.transform.Find("OpenBarterValue");
         TextMeshProUGUI valueText;
 
         // create value label if it doesn't exist yet
         if (!existing) {
-            valueText       = Object.Instantiate(____count, __instance.Icon.transform);
+            valueText       = Object.Instantiate(____count, __instance.transform);
             valueText.name  = "OpenBarterValue";
             valueText.color = new Color(0.55f, 1.0f, 0.21f, 0.85f);
             RectTransform rt = valueText.GetComponent<RectTransform>();
