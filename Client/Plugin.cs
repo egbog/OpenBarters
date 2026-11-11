@@ -16,6 +16,7 @@ using OpenBarters.Patches.ItemState;
 using OpenBarters.Patches.Panel;
 using OpenBarters.Patches.Pricing;
 using OpenBarters.Patches.Submit;
+using UnityEngine;
 
 namespace OpenBarters;
 
@@ -38,6 +39,14 @@ public class Plugin : BaseUnityPlugin {
                                                                       "1 = no additional markup; 1.5 = 50% markup on the substituted part.",
                                                                       new AcceptableValueRange<float>(1f, 5f)));
         SubstitutePriceMultiplier.SettingChanged += (_, _) => {
+            float rounded = Mathf.Round(SubstitutePriceMultiplier.Value * 100) / 100;
+
+            // not rounded yet: write it back. that raises SettingChanged again, and the second call refreshes
+            if (!Mathf.Approximately(rounded, SubstitutePriceMultiplier.Value)) {
+                SubstitutePriceMultiplier.Value = rounded;
+                return;
+            }
+
             if (OpenBarterController.ToggleActive()) {
                 OpenBarterController.TraderAssortment?.PreparedSumChanged.Invoke();
             }
@@ -46,14 +55,22 @@ public class Plugin : BaseUnityPlugin {
         // minimum required value as a fraction of the reward’s handbook value
         MinimumValueFactor = Config.Bind("Pricing",
                                          "Minimum barter value",
-                                         0.50f,
+                                         0.75f,
                                          new ConfigDescription("Minimum barter value as a percentage of the reward’s handbook value. " +
                                                                "The substitute price multiplier is applied after the minimum. " +
                                                                "This prevents barters from being dirt cheap, even with the global multiplier, due to low valued requirements. " +
-                                                               "0 = no minimum value; 0.5 = 50% of handbook value of offered item.",
+                                                               "0 = no minimum value; 50% = 50% of handbook value of offered item.",
                                                                new AcceptableValueRange<float>(0f, 1f)));
 
         MinimumValueFactor.SettingChanged += (_, _) => {
+            float rounded = Mathf.Round(MinimumValueFactor.Value * 100) / 100;
+
+            // not rounded yet: write it back. that raises SettingChanged again, and the second call refreshes
+            if (!Mathf.Approximately(rounded, MinimumValueFactor.Value)) {
+                MinimumValueFactor.Value = rounded;
+                return;
+            }
+
             if (OpenBarterController.ToggleActive()) {
                 OpenBarterController.TraderAssortment?.PreparedSumChanged.Invoke();
             }
