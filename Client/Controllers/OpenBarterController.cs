@@ -125,6 +125,17 @@ public class OpenBarterController {
         return false;
     }
 
+    // trader currency rate; supply data loads async, missing when entering from the hideout
+    private bool TryGetCurrencyRate(out double rate) {
+        if (CurrentTrader._supplyData != null) {
+            rate = CurrentTrader.CurrencyCourses[CurrencyUtil.GetCurrencyId(CurrentTrader.Settings.Currency)];
+            return true;
+        }
+
+        rate = 1.0;
+        return false;
+    }
+
     // handbook value of one required unit in trader currency, dogtags × level
     public double GetUnitValue(Requisite req) {
         // skip money reqs
@@ -132,7 +143,9 @@ public class OpenBarterController {
             return 0;
         }
 
-        double currencyRate = CurrentTrader.CurrencyCourses[CurrencyUtil.GetCurrencyId(CurrentTrader.Settings.Currency)];
+        if (!TryGetCurrencyRate(out double currencyRate)) {
+            return 0;
+        }
 
         double basePrice      = Singleton<Handbook>.Instance.GetBasePrice(req.RequiredItem.TemplateId);
         // convert into trader currency
@@ -151,12 +164,15 @@ public class OpenBarterController {
             return 0;
         }
 
+        if (!TryGetCurrencyRate(out double currencyRate)) {
+            return 0;
+        }
+
         // handbook value of the reward incl. attachments/plates in trader currency, × quantity bought
         double handbookValue =
             PriceCalculator.CalculateBasePriceForAllItems(TraderAssortment.SelectedItem, 1, Singleton<Handbook>.Instance, false) *
             TraderAssortment.CurrentQuantity;
-        
-        double currencyRate = CurrentTrader.CurrencyCourses[CurrencyUtil.GetCurrencyId(CurrentTrader.Settings.Currency)];
+
         return handbookValue / currencyRate;
     }
 
@@ -298,6 +314,7 @@ public class OpenBarterController {
         if (item.PinLockState == EItemPinLockState.Locked) {
             return null;
         }
+
         // check if the item is a requirement of the barter
         return assortment.CurrentRequisites.FirstOrDefault(req => !req.Enough && req.IsRequired(item) && item.IsExchangeable(true) &&
                                                                   !assortment.IsBeingSold(item));
