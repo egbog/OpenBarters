@@ -49,9 +49,9 @@ public class OpenBarterController {
         TraderController = new ItemController(barterStash, trader.Id, trader.Settings.Nickname.Localized(null), true, EOwnerType.Profile);
     }
 
-    // one basket per trader. rebuild when trader changes
+    // one basket per trader instance. rebuild when it changes (traders are recreated after a raid)
     public static void UseTrader(Trader traderToCheck) {
-        if (Current == null || Current.CurrentTrader.Id != traderToCheck.Id) {
+        if (Current == null || Current.CurrentTrader != traderToCheck) {
             Current = new OpenBarterController(traderToCheck);
         }
     }
