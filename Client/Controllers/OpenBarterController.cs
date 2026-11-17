@@ -15,20 +15,23 @@ namespace OpenBarters.Controllers;
 public class OpenBarterController {
     public static OpenBarterController? Current { get; private set; }
 
-    public static TradingTable?         BarterTradingTable;         // our clone of the sell-tab table
-    public static TradingTableGridView? BarterTradingTableGridView; // the clone's grid view (drop target)
-    public static UpdatableToggle?      OpenBarterToggle;           // grid switch
-    public static Assortment?           TraderAssortment;           // the current trader's assortment, set on every panel Show
-    public static RectTransform?        BarterGridSlot;             // layout placeholder holding the clone inside the buy window
-    public static LayoutElement?        SlotLayout;                 // reserves the slot's height in the window's layout
-    public static RectTransform?        MainViewport;               // buy window's scroll viewport, used to center the grid
-    public static Transform?            BarterValueRibbon;          // required value ribbon, clone of ValidWarning
-    public static TextMeshProUGUI?      BarterValueLabelText;
-    public static Image?                BackgroundRibbon;
-    public static Image?                BackgroundGlow;
-    public static Sprite?               GreenGlowSprite; // status_green_glow, used to indicate sufficient basket value
-    public static Sprite?               RedGlowSprite;   // warning_glow
-    public static Tab?                  SellTab;
+    public static          TradingTable?              BarterTradingTable; // our clone of the sell-tab table
+    public static          TradingTableGridView?      BarterTradingTableGridView; // the clone's grid view (drop target)
+    public static          UpdatableToggle?           OpenBarterToggle; // grid switch
+    public static          Assortment?                TraderAssortment; // the current trader's assortment, set on every panel Show
+    public static          RectTransform?             BarterGridSlot; // layout placeholder holding the clone inside the buy window
+    public static          LayoutElement?             SlotLayout; // reserves the slot's height in the window's layout
+    public static          RectTransform?             MainViewport; // buy window's scroll viewport, used to center the grid
+    public static          Transform?                 BarterValueRibbon; // required value ribbon, clone of ValidWarning
+    public static          TextMeshProUGUI?           BarterValueLabelText;
+    public static          Image?                     BackgroundRibbon;
+    public static          Image?                     BackgroundGlow;
+    public static          Sprite?                    GreenGlowSprite; // status_green_glow, used to indicate sufficient basket value
+    public static          Sprite?                    RedGlowSprite;   // warning_glow
+    public static          Tab?                       SellTab;
+    public static          Handbook?                  HandbookCache;
+    public static          Dictionary<string, float>? HandbookPrices;
+    public static readonly SnapshotPriceSource        PriceSource = new();
 
     public ItemController TraderController; // owns the basket's fake stash, not the trader's own controller
 
@@ -147,7 +150,7 @@ public class OpenBarterController {
             return 0;
         }
 
-        double basePrice      = Singleton<Handbook>.Instance.GetBasePrice(req.RequiredItem.TemplateId);
+        double basePrice      = CheckHandbookValue(req.RequiredItem.TemplateId);
         // convert into trader currency
         double convertedPrice = basePrice / currencyRate;
 
@@ -169,9 +172,8 @@ public class OpenBarterController {
         }
 
         // handbook value of the reward incl. attachments/plates in trader currency, × quantity bought
-        double handbookValue =
-            PriceCalculator.CalculateBasePriceForAllItems(TraderAssortment.SelectedItem, 1, Singleton<Handbook>.Instance, false) *
-            TraderAssortment.CurrentQuantity;
+        double handbookValue = PriceCalculator.CalculateBasePriceForAllItems(TraderAssortment.SelectedItem, 1, PriceSource, false) *
+                               TraderAssortment.CurrentQuantity;
 
         return handbookValue / currencyRate;
     }
@@ -318,5 +320,14 @@ public class OpenBarterController {
         // check if the item is a requirement of the barter
         return assortment.CurrentRequisites.FirstOrDefault(req => !req.Enough && req.IsRequired(item) && item.IsExchangeable(true) &&
                                                                   !assortment.IsBeingSold(item));
+    }
+
+    // real handbook price: snapshot taken before the flea overwrote it, else live
+    public static double CheckHandbookValue(string id) {
+        if (HandbookPrices != null && HandbookCache == Singleton<Handbook>.Instance && HandbookPrices.TryGetValue(id, out float value)) {
+            return value;
+        }
+
+        return Singleton<Handbook>.Instance.GetBasePrice(id);
     }
 }

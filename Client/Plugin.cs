@@ -94,6 +94,7 @@ public class Plugin : BaseUnityPlugin {
         new PrepareToSellPatch().Enable();
         new RequisitePrepareItemPatch().Enable();
         new RequisitePriceLabelPatch().Enable();
+        new CacheHandbookPricesPatch().Enable();
 
         if (Chainloader.PluginInfos.ContainsKey("com.tyfon.uifixes")) {
             new UIFixesAutoSwitchPatch().Enable();
