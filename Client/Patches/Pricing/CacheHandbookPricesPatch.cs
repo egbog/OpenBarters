@@ -18,7 +18,7 @@ public class CacheHandbookPricesPatch : ModulePatch {
         if (HandbookCache != Singleton<Handbook>.Instance) {
             // store handbook instance
             HandbookCache = Singleton<Handbook>.Instance;
-            
+
             // reset the price dictionary
             HandbookPrices = new Dictionary<string, float>();
 

@@ -70,7 +70,7 @@ public class PanelShowPatch : ModulePatch {
                                         .Invoke();                                      // re-check greying for this barter's required items
                     OpenBarterController.TraderAssortment?.PreparedSumChanged.Invoke(); // redraw price + ribbon
                 }
-                
+
                 // hide/restore the "missing items" ribbon
                 __instance.UpdateValidDealWarning();
             });

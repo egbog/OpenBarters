@@ -2,7 +2,6 @@
 using EFT.InventoryLogic;
 using EFT.UI;
 using EFT;
-using OpenBarters.Controllers;
 using OpenBarters.Localization;
 using SPT.Reflection.Patching;
 using UnityEngine;
