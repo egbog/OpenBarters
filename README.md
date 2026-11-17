@@ -49,7 +49,7 @@ Settings can be changed in-game with the BepInEx Configuration Manager (F12 by d
 Barters that require both money and items will only charge the items. There are none in vanilla, so this only affects modded traders.
 
 ## Localization
-Russian is currently the only translated locale, with English being the fallback. Translations can easily be added by contributors by adding an entry in `Client/Localization/BarterValueText.cs`
+Currently translated into Russian and Simplified Chinese. Translations can easily be added by contributors by adding an entry in `Client/Localization/BarterValueText.cs`
 
 ## Compatibility
 Compatible with SPT 4.1.x
@@ -92,6 +92,8 @@ Please reference existing code formatting and naming conventions when adding new
 
 ## Credits
 Includes `MultiSelectInterop.cs` from [UI Fixes](https://github.com/tyfon7/UIFixes) by Tyfon (MIT).
+
+[forcedroidbrain](https://github.com/forcedroidbrain) - Assistance with translations, configurable markup and bug fixes.
 
 ## AI Disclosure
 This README was written with the help of AI (Claude).
