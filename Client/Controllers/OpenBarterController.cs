@@ -200,7 +200,7 @@ public class OpenBarterController {
             double scaledFloor = floor          * unmetShare;
             remainingValue = Math.Max(remainingValue, scaledFloor);
         }
-
+        
         // apply global multiplier
         return (int)(remainingValue * Plugin.SubstitutePriceMultiplier.Value);
     }
